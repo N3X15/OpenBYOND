@@ -5,7 +5,7 @@
 ## Project Setup
 cmake_minimum_required(VERSION 2.8)
 
-## WHAT A CREATIVE NAME SO MUCH WOW
+## WHAT A CREATIVE NAME WOW
 set(MODULE_NAME ${PROJECT_NAME}-core)
 
 ## Versioning shit
@@ -22,6 +22,12 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 ## Configure the build system
+find_package(BISON)
+find_package(FLEX)
+
+BISON_TARGET(DMParser ${CMAKE_CURRENT_SOURCE_DIR}/grammar/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
+FLEX_TARGET(DMScanner ${CMAKE_CURRENT_SOURCE_DIR}/grammar/tokens.l ${CMAKE_CURRENT_BINARY_DIR}/tokens.cpp)
+ADD_FLEX_BISON_DEPENDENCY(DMScanner DMParser)
 
 # Add the include folder to the include path
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
