@@ -1,0 +1,1 @@
+Extract Allegro 5.0.x here.  Folder should contain bin, include, and lib.
