@@ -1,0 +1,5 @@
+/openbyond-core/grammar/lex.yy.c
+/openbyond-core/grammar/parser.tab.c
+/openbyond-core/grammar/parser.tab.h
+/openbyond-core/grammar/test.exe
+/openbyond-core/grammar/test.exe.stackdump

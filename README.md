@@ -16,8 +16,6 @@ Not yet.
 
 ### Compile Process
 ```
-# Download allegro
-wget -O lib/allegro-5.zip 
 $ cmake
 ```
 

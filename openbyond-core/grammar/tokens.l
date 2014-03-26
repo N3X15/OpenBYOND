@@ -2,80 +2,119 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdbool.h>
+
+#include "parser.tab.h"
 
 #define MAX_DEPTH 72
 
-// Hax for fixing BYOND's awful offside rule stupidity
-int nesting = 0 ;
-unsigned int indent_stack[MAX_DEPTH] ;
-unsigned int level = 0 ;
-unsigned int first = 1 ;
-void process_indent(char* line) ;
+#define YY_DECL extern "C" int yylex()
 
+#define DM_TAB_WIDTH 4
+
+/* globals to track current indentation */
+int current_line_indent = 0;   /* indentation of the current line */
+int bracket_indent_level = 0;  /* indentations given by brackets because BYOND is fucking dumb. */
+int indent_level = 0;          /* indentation level passed to the parser */
+
+/* Current position */
+int linenum = 1;
 %}
-NAME [A-Za-z_][A-Za-z0-9_]*
-NUMBER [0-9\.]+
 
+%x COMMENT
+%x MULTICOMMENT
+%x INDENT_PROCESSING
+%x STRING_STATE
+%x MULTISTRING
+    
 %option noyywrap
-%%
-
-^[ ]*\n			{/* Ignore blank lines. */}
-^[ ]*[^ \n]+	{
-	int last = yyleng - 1;
-	process_indent(yytext) ;
-	while (last >= 0 && yytext[last] != ' ' && yytext[last] != '\t') {
-		unput(yytext[last]);
-		last--;
-	}}
-
-"("  {printf(" "); ECHO; nesting++ ; }
-")"  {printf(" "); ECHO; nesting-- ; }
-
-{NAME}|{NUMBER} {printf(" ") ; ECHO;}
-
-[ \r] {}
-\n    {}
-
-<<EOF>>  { process_indent("") ; return 0 ; }
 
 %%
+<INDENT_PROCESSING>" "  { current_line_indent++; }
+<INDENT_PROCESSING>"\t" { current_line_indent = (current_line_indent + DM_TAB_WIDTH) & ~(DM_TAB_WIDTH-1); }
+<INDENT_PROCESSING>"\n" { current_line_indent = 0; linenum++; /*ignoring blank line */ }
+<INDENT_PROCESSING>.    {
+                   unput(*yytext);
+                   if (current_line_indent > indent_level) {
+                       indent_level++;
+                       return INDENT;
+                   } else if (current_line_indent < indent_level) {
+                       indent_level--;
+                       return DEDENT;
+                   } else {
+                       BEGIN INITIAL;
+                   }
+                 }
 
-unsigned int white_count(char* line) {
-  unsigned int count = 0 ;
-  while (*line == ' ' || *line == '\t')
-    count++, line++;
-  return count ;
-}
+"\n" { 
+		/* Only handle block indents if we're not in a bracket indent. */
+		if(bracket_indent_level==0) {
+			current_line_indent = 0;
+			BEGIN INDENT_PROCESSING; 
+		}
+		linenum++;
+		return NEWLINE;
+	}
 
-void process_indent(char* line) {
-  if (nesting)
-    /* Ignore indents while nested. */
-    return ;
+"{"						{ bracket_indent_level++; return INDENT; }
+"}"						{ assert(bracket_indent_level>0); bracket_indent_level--; return DEDENT; }
+[a-zA-Z_][a-zA-Z0-9_]*	{ yylval.strval=strdup(yytext);return IDENTIFIER; }
 
-  unsigned int indent = white_count(line) ;
+%{ /* Beginning of nan0desu's lexer rules. */ %}
+%{ /* ESCAPES */ %}
+\\.  {;}
+\\\n { linenum++;}
 
-  if (indent == indent_stack[level]) {
-    if (!first) printf(" ;") ;
-    first = 0 ;
-    return ;
-  }
+%{/* Comments */%}
+\/\/                    {BEGIN COMMENT;}
+<COMMENT>\n             {BEGIN INITIAL; yyless(0);}
+<COMMENT>.              {;}
 
-  if (indent > indent_stack[level]) {
-    printf(" {") ;
-    assert(level+1 < MAX_DEPTH) ;
-    indent_stack[++level] = indent ;
-    return ;
-  }
+\/\*                    { BEGIN MULTICOMMENT; }
+<MULTICOMMENT>\\.       { ; }
+<MULTICOMMENT>\\\n      { linenum++; }
+<MULTICOMMENT>\*\/      { BEGIN INITIAL; }
+<MULTICOMMENT>.         { ; }
+<MULTICOMMENT>\n        { linenum++; }
 
-  while (indent < indent_stack[level]) {
-    --level ;
-    printf(" }") ;
-  }
-  assert(level >= 0) ;
-}
+%{/* Strings */%}
+\"                      {BEGIN STRING_STATE;}
+<STRING_STATE>\n        { 
+		linenum++; 
+		BEGIN INITIAL; 
+		yyless(0); 
+		return STRING;
+	}
+<STRING_STATE>\\.       { ;}
+<STRING_STATE>\\\n      { linenum++; }
+<STRING_STATE>\"        { BEGIN INITIAL; return STRING; }
+<STRING_STATE>.         { ; }
 
-int main(int argc, char* argv[]) {
-  indent_stack[0] = 0 ;
-  yylex() ;
-  printf("\n") ;
-}
+\{\"                    { BEGIN MULTISTRING; }
+<MULTISTRING>\\.        { ; }
+<MULTISTRING>\\\n       { linenum++; }
+<MULTISTRING>\"\}       { BEGIN INITIAL; return STRING; }
+<MULTISTRING>.          { ; }
+<MULTISTRING>\n         { linenum++; }
+
+%{/* Keywords */%}
+var                     {return VAR;}
+proc|verb               {return PROC;}
+
+%{/* Operators */%}
+"=" |
+"+" |
+"-" |
+"*" |
+"/" |
+"(" |
+")"                     {return yytext[0];}
+
+[1-9][0-9]*             {return NUMBER;}
+[1-9][0-9]*\.[0-9]+     {return NUMBER;}
+
+%{/* Dump extraneous space */%}
+[ \t]+                  {;}
+
+%%
+
