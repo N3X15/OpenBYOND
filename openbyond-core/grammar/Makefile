@@ -1,9 +1,12 @@
-.PHONY : all clean lex
+.PHONY : all clean lex test
 
 all : test
 lex : lexer
 
-test : lex.yy.c parser.tab.c
+test: testapp
+	./test < test.dm
+
+testapp : lex.yy.c parser.tab.c
 	gcc -o test parser.tab.c lex.yy.c
 	
 lexer : lex.yy.c parser.tab.h
