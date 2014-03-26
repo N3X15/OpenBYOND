@@ -13,7 +13,7 @@ lexer : lex.yy.c parser.tab.h
 	gcc -o dreamlex lex.yy.c
 
 lex.yy.c : tokens.l
-	flex -d tokens.l
+	flex tokens.l
 
 parser.tab.c : parser.y
 	bison -dv parser.y

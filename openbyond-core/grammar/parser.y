@@ -56,13 +56,13 @@ struct Type {
 	Typelist* children;
 	void* parent;
 } typedef Type;
-
+/*
 int yyerror (const char *s)
 {
-    printf("Parser error: %s \n ",s);
+    printf("Parser error: %s \n",s);
     return 0;
 }
-
+*/
 Type root;
 Type* current;
 
@@ -108,32 +108,50 @@ void printTypes(Type* base, int depth) {
 //extern "C" int yylex();
 
 %}
+
 %error-verbose
+
 %%
 
-definitions: definition definitions | vardef definitions |
+definitions: definition definitions 
+	| vardef definitions 
+	| atomdef definitions
+	| procdef definitions
+	|
 
-vardef: var_start newlines INDENT variables DEDENT	{current = (Type*) current->parent;}
-	| var_start '/' variable						{current = (Type*) current->parent;}
+vardef:   var_start INDENT variables DEDENT             {current = (Type*) current->parent;}
+	| var_start '/' variable                        {current = (Type*) current->parent;}
+	
+procdef:  atomdecl '(' arguments ')' INDENT	
+	
+atomdef:  atomdecl INDENT                               {current = (Type*) current->parent;}
+	| defname INDENT                                {current = (Type*) current->parent;}
+	| DEDENT defname                                {current = (Type*) current->parent;}
+	| INDENT defname                                {current = (Type*) current->parent;}
+	
+atomdecl: '/' defname                                   {current = (Type*) current->parent;}
 
-defname: IDENTIFIER {current = addType($1);}
+defname: IDENTIFIER                                     {current = addType($1);}
 
-definition: defname newlines definition_contents	{current = (Type*) current->parent;}
-		| defname '/' definition 					{current = (Type*) current->parent;}
-		| defname '/' vardef						{current = (Type*) current->parent;}
-		| '/' definition
+definition: defname newlines definition_contents        {current = (Type*) current->parent;}
+	| defname '/' definition                        {current = (Type*) current->parent;}
+	| defname '/' vardef                            {current = (Type*) current->parent;}
 		
 definition_contents: INDENT definitions DEDENT opt_newlines
-		|
+	|
 		
-var_start: VAR {current = addType("var");}
+var_start: VAR                                          {current = addType("var");}
+
+arguments: variable                                     {current = (Type*) current->parent;}
+	| variable ',' arguments                        {current = (Type*) current->parent;}
+	|
 
 variables: variable variables |
 
-varname: IDENTIFIER									{current = addType($1);}
-variable: varname newlines variable_contents 		{current = (Type*) current->parent;}
-		| varname '/' variable 						{current = (Type*) current->parent;}
-		| varname '=' const_expression newlines		{current = (Type*) current->parent;}
+varname: IDENTIFIER                                     {current = addType($1);}
+variable: varname newlines variable_contents            {current = (Type*) current->parent;}
+		| varname '/' variable                  {current = (Type*) current->parent;}
+		| varname '=' const_expression newlines {current = (Type*) current->parent;}
 		
 variable_contents: INDENT variables DEDENT |
 
@@ -146,7 +164,6 @@ const_expression: NUMBER | STRING | '(' const_expression ')' |
 		
 opt_newlines : newlines |		
 newlines: NEWLINE newlines | NEWLINE
-
 %%
 
 #include <stdio.h>

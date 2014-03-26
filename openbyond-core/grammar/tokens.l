@@ -11,6 +11,8 @@
 //#define YY_DECL extern "C" int yylex()
 
 #define LEX_DEBUG(x) printf("%5d: %s\n",linenum,x)
+#define DEBUG_TOKEN(x) printf("%s ",x)
+#define DEBUG_EOL printf("\n")
 
 #define DM_TAB_WIDTH 4
 
@@ -30,42 +32,46 @@ int linenum = 1;
 %x MULTISTRING
     
 %option noyywrap
+%option yylineno
 
 %%
-<INDENT_PROCESSING>" "  { LEX_DEBUG("\\s");current_line_indent++; }
-<INDENT_PROCESSING>"\t" { LEX_DEBUG("\\t");current_line_indent += (current_line_indent + 4) & ~3; }
-<INDENT_PROCESSING>"\n" { LEX_DEBUG("\\n");current_line_indent = 0; linenum++; /*ignoring blank line */ }
+<INDENT_PROCESSING>" "  { current_line_indent++; }
+<INDENT_PROCESSING>"\t" { current_line_indent += (current_line_indent + 4) & ~3; }
+<INDENT_PROCESSING>"\n" { current_line_indent = 0; DEBUG_EOL; linenum++; /*ignoring blank line */ }
 <INDENT_PROCESSING>.    {
-		printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
+		//printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
 		unput(*yytext);
 		if (current_line_indent > indent_level) {
 			indent_level=current_line_indent;
-			LEX_DEBUG("INDENT");
+			DEBUG_TOKEN("INDENT");
 			return INDENT;
 		} else if (current_line_indent < indent_level) {
 			indent_level=current_line_indent;
-			LEX_DEBUG("DEDENT");
+			DEBUG_TOKEN("DEDENT");
 			return DEDENT;
 		} else {
 			//LEX_DEBUG("<INITIAL>");
+			//DEBUG_TOKEN("NEWLINE");
 			BEGIN INITIAL;
+			return ;//NEWLINE;
 		}
 	}
 
 "\n" { 
-		LEX_DEBUG("NEWLINE");
 		/* Only handle block indents if we're not in a bracket indent. */
 		if(bracket_indent_level==0) {
 			current_line_indent = 0;
 			BEGIN INDENT_PROCESSING; 
 		}
 		linenum++;
-		return NEWLINE;
+		DEBUG_EOL;
+		//DEBUG_TOKEN("NEWLINE");
+		//return NEWLINE;
 	}
 
 %{ /* Bracket "indents".  BYOND is stupid. */ %}
-"{"                     { bracket_indent_level++; LEX_DEBUG("INDENT"); return INDENT; }
-"}"                     { LEX_DEBUG("DEDENT");assert(bracket_indent_level>0); bracket_indent_level--; return DEDENT; }
+"{"                     { bracket_indent_level++; DEBUG_TOKEN("INDENT"); return INDENT; }
+"}"                     { DEBUG_TOKEN("DEDENT");assert(bracket_indent_level>0); bracket_indent_level--; return DEDENT; }
 
 %{ /* Beginning of nan0desu's lexer rules. */ %}
 %{ /* ESCAPES */ %}
@@ -93,20 +99,20 @@ int linenum = 1;
 		return STRING;
 	}
 <STRING_STATE>\\.       { ;}
-<STRING_STATE>\\\n      { linenum++; }
-<STRING_STATE>\"        { BEGIN INITIAL; LEX_DEBUG("STRING");return STRING; }
+<STRING_STATE>\\\n      { DEBUG_EOL; linenum++; }
+<STRING_STATE>\"        { BEGIN INITIAL; DEBUG_TOKEN("STRING");return STRING; }
 <STRING_STATE>.         { ; }
 
 \{\"                    { BEGIN MULTISTRING; }
 <MULTISTRING>\\.        { ; }
-<MULTISTRING>\\\n       { linenum++; }
-<MULTISTRING>\"\}       { BEGIN INITIAL; LEX_DEBUG("STRING");return STRING; }
+<MULTISTRING>\\\n       { DEBUG_EOL; linenum++; }
+<MULTISTRING>\"\}       { BEGIN INITIAL; DEBUG_TOKEN("STRING");return STRING; }
 <MULTISTRING>.          { ; }
-<MULTISTRING>\n         { linenum++; }
+<MULTISTRING>\n         { DEBUG_EOL; linenum++; }
 
 %{/* Keywords */%}
-var                     {LEX_DEBUG("VAR");return VAR;}
-proc|verb               {LEX_DEBUG("PROC");return PROC;}
+var                     {DEBUG_TOKEN("VAR");return VAR;}
+proc|verb               {DEBUG_TOKEN("PROC");return PROC;}
 
 %{/* Operators */%}
 "=" |
@@ -115,17 +121,22 @@ proc|verb               {LEX_DEBUG("PROC");return PROC;}
 "*" |
 "/" |
 "(" |
-")"                     {LEX_DEBUG(yytext);return yytext[0];}
+")"                     {DEBUG_TOKEN(yytext);/*return yytext[0];*/}
 
-[a-zA-Z_][a-zA-Z0-9_]*	{LEX_DEBUG("IDENTIFIER");yylval.strval=strdup(yytext);return IDENTIFIER; }
+[a-zA-Z_][a-zA-Z0-9_]*	{DEBUG_TOKEN("IDENTIFIER");yylval.strval=strdup(yytext);return IDENTIFIER; }
 
-[1-9][0-9]*             {LEX_DEBUG("NUMBER");return NUMBER;}
-[1-9][0-9]*\.[0-9]+     {LEX_DEBUG("NUMBER");return NUMBER;}
+[1-9][0-9]*             {DEBUG_TOKEN("NUMBER");return NUMBER;}
+[1-9][0-9]*\.[0-9]+     {DEBUG_TOKEN("NUMBER");return NUMBER;}
 
 %{/* Dump extraneous space */%}
 [ \t]+                  {;}
 
-%{/* Catchall */%}
-. {ECHO;}
+
 %%
 
+
+int yyerror (const char *s)
+{
+    printf("Parser error[%d]: %s \n",yylineno,s);
+    return 0;
+}
