@@ -73,8 +73,11 @@ int linenum = 1;
 "{"                     { bracket_indent_level++; DEBUG_TOKEN("INDENT"); return INDENT; }
 "}"                     { DEBUG_TOKEN("DEDENT");assert(bracket_indent_level>0); bracket_indent_level--; return DEDENT; }
 
-%{ /* Beginning of nan0desu's lexer rules. */ %}
-%{ /* ESCAPES */ %}
+%{ 
+/* Beginning of nan0desu's lexer rules. */ 
+
+/* ESCAPES */ 
+%}
 \\.  {;}
 \\\n { linenum++;}
 
@@ -121,7 +124,7 @@ proc|verb               {DEBUG_TOKEN("PROC");return PROC;}
 "*" |
 "/" |
 "(" |
-")"                     {DEBUG_TOKEN(yytext);/*return yytext[0];*/}
+")"                     {DEBUG_TOKEN(yytext);return yytext[0];}
 
 [a-zA-Z_][a-zA-Z0-9_]*	{DEBUG_TOKEN("IDENTIFIER");yylval.strval=strdup(yytext);return IDENTIFIER; }
 

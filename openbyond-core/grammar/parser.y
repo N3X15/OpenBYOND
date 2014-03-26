@@ -2,30 +2,32 @@
 OpenBYOND DMScript Bison Syntax
 
 Originally written for DreamCatcher by nan0desu.
+
+Slowly being turned into a fully-fledged DM interpreter.
 */
 
-%token INDENT
-%token DEDENT
-%token IDENTIFIER
-%token VAR
-%token PROC
-%token OPERATOR 
-%token IN 
-%token EXPONENT 
-%token EQUAL 
-%token LSHIFT 
-%token RSHIFT 
-%token INCREMENT 
-%token DECREMENT 
-%token LAND 
-%token LOR 
-%token LEQUAL 
-%token GEQUAL 
-%token NEQUAL 
-%token STRING 
 %token AS 
+%token DECREMENT 
+%token DEDENT
+%token EQUAL 
+%token EXPONENT 
+%token GEQUAL 
+%token IDENTIFIER
+%token IN 
+%token INCREMENT 
+%token INDENT
+%token LAND 
+%token LEQUAL 
+%token LOR 
+%token LSHIFT 
+%token NEQUAL 
 %token NEWLINE 
 %token NUMBER
+%token OPERATOR 
+%token PROC
+%token RSHIFT 
+%token STRING 
+%token VAR
 
 %left '+' '-'
 %left '*' '/'
@@ -46,6 +48,8 @@ Originally written for DreamCatcher by nan0desu.
 
 #include "parser.tab.h"
 
+/* Here be dragons, and the type tree that'll eventually be replaced. */
+
 struct Typelist {
 	void* contents;
 	void* next;
@@ -56,13 +60,7 @@ struct Type {
 	Typelist* children;
 	void* parent;
 } typedef Type;
-/*
-int yyerror (const char *s)
-{
-    printf("Parser error: %s \n",s);
-    return 0;
-}
-*/
+
 Type root;
 Type* current;
 
