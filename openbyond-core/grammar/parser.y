@@ -38,7 +38,7 @@ struct Type {
 
 int yyerror (const char *s)
 {
-    printf("Parser error:%d: %s \n ",s);
+    printf("Parser error: %s \n ",s);
     return 0;
 }
 

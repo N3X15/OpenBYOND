@@ -36,6 +36,7 @@ int linenum = 1;
 <INDENT_PROCESSING>"\t" { LEX_DEBUG("\\t");current_line_indent = (current_line_indent + 4) & ~3; }
 <INDENT_PROCESSING>"\n" { LEX_DEBUG("\\n");current_line_indent = 0; linenum++; /*ignoring blank line */ }
 <INDENT_PROCESSING>.    {
+		LEX_DEBUG("INDENT_PROCESSING - .");
 		unput(*yytext);
 		if (current_line_indent > indent_level) {
 			indent_level++;
@@ -46,6 +47,7 @@ int linenum = 1;
 			LEX_DEBUG("DEDENT");
 			return DEDENT;
 		} else {
+			LEX_DEBUG("<INITIAL>");
 			BEGIN INITIAL;
 		}
 	}
@@ -61,8 +63,9 @@ int linenum = 1;
 		return NEWLINE;
 	}
 
-"{"						{ bracket_indent_level++; LEX_DEBUG("INDENT"); return INDENT; }
-"}"						{ assert(bracket_indent_level>0); bracket_indent_level--;LEX_DEBUG("DEDENT"); return DEDENT; }
+%{ /* Bracket "indents".  BYOND is stupid. */ %}
+"{"                     { bracket_indent_level++; LEX_DEBUG("INDENT"); return INDENT; }
+"}"                     { LEX_DEBUG("DEDENT");assert(bracket_indent_level>0); bracket_indent_level--; return DEDENT; }
 
 %{ /* Beginning of nan0desu's lexer rules. */ %}
 %{ /* ESCAPES */ %}
@@ -114,7 +117,7 @@ proc|verb               {LEX_DEBUG("PROC");return PROC;}
 "(" |
 ")"                     {LEX_DEBUG(yytext);return yytext[0];}
 
-[a-zA-Z_][a-zA-Z0-9_]*	{ yylval.strval=strdup(yytext);LEX_DEBUG("IDENTIFIER");return IDENTIFIER; }
+[a-zA-Z_][a-zA-Z0-9_]*	{LEX_DEBUG("IDENTIFIER");yylval.strval=strdup(yytext);return IDENTIFIER; }
 
 [1-9][0-9]*             {LEX_DEBUG("NUMBER");return NUMBER;}
 [1-9][0-9]*\.[0-9]+     {LEX_DEBUG("NUMBER");return NUMBER;}
@@ -122,5 +125,7 @@ proc|verb               {LEX_DEBUG("PROC");return PROC;}
 %{/* Dump extraneous space */%}
 [ \t]+                  {;}
 
+%{/* Catchall */%}
+. {ECHO;}
 %%
 
