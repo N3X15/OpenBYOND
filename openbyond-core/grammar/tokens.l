@@ -33,21 +33,21 @@ int linenum = 1;
 
 %%
 <INDENT_PROCESSING>" "  { LEX_DEBUG("\\s");current_line_indent++; }
-<INDENT_PROCESSING>"\t" { LEX_DEBUG("\\t");current_line_indent = (current_line_indent + 4) & ~3; }
+<INDENT_PROCESSING>"\t" { LEX_DEBUG("\\t");current_line_indent += (current_line_indent + 4) & ~3; }
 <INDENT_PROCESSING>"\n" { LEX_DEBUG("\\n");current_line_indent = 0; linenum++; /*ignoring blank line */ }
 <INDENT_PROCESSING>.    {
-		LEX_DEBUG("INDENT_PROCESSING - .");
+		printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
 		unput(*yytext);
 		if (current_line_indent > indent_level) {
-			indent_level++;
+			indent_level=current_line_indent;
 			LEX_DEBUG("INDENT");
 			return INDENT;
 		} else if (current_line_indent < indent_level) {
-			indent_level--;
+			indent_level=current_line_indent;
 			LEX_DEBUG("DEDENT");
 			return DEDENT;
 		} else {
-			LEX_DEBUG("<INITIAL>");
+			//LEX_DEBUG("<INITIAL>");
 			BEGIN INITIAL;
 		}
 	}

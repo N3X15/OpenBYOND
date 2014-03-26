@@ -1,10 +1,31 @@
 /*
-OpenBYOND Bison Syntax
+OpenBYOND DMScript Bison Syntax
 
 Originally written for DreamCatcher by nan0desu.
 */
 
-%token INDENT DEDENT IDENTIFIER VAR PROC OPERATOR IN EXPONENT EQUAL LSHIFT RSHIFT INCREMENT DECREMENT LAND LOR LEQUAL GEQUAL NEQUAL STRING AS NEWLINE NUMBER
+%token INDENT
+%token DEDENT
+%token IDENTIFIER
+%token VAR
+%token PROC
+%token OPERATOR 
+%token IN 
+%token EXPONENT 
+%token EQUAL 
+%token LSHIFT 
+%token RSHIFT 
+%token INCREMENT 
+%token DECREMENT 
+%token LAND 
+%token LOR 
+%token LEQUAL 
+%token GEQUAL 
+%token NEQUAL 
+%token STRING 
+%token AS 
+%token NEWLINE 
+%token NUMBER
 
 %left '+' '-'
 %left '*' '/'
