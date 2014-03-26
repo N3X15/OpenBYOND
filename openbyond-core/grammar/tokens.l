@@ -51,9 +51,7 @@ int linenum = 1;
 			return DEDENT;
 		} else {
 			//LEX_DEBUG("<INITIAL>");
-			//DEBUG_TOKEN("NEWLINE");
 			BEGIN INITIAL;
-			//return NEWLINE;
 		}
 	}
 
@@ -65,8 +63,6 @@ int linenum = 1;
 		}
 		linenum++;
 		DEBUG_EOL;
-		//DEBUG_TOKEN("NEWLINE");
-		//return NEWLINE;
 	}
 
 %{ /* Bracket "indents".  BYOND is stupid. */ %}
@@ -78,8 +74,8 @@ int linenum = 1;
 
 /* ESCAPES */ 
 %}
-\\.  {;}
-\\\n { linenum++;}
+\\.                     {;}
+\\\n                    {linenum++;}
 
 %{/* Comments */%}
 \/\/                    {BEGIN COMMENT;}
@@ -114,9 +110,10 @@ int linenum = 1;
 <MULTISTRING>\n         { DEBUG_EOL; linenum++; }
 
 %{/* Keywords */%}
-"var"                   {DEBUG_TOKEN("VAR");return VAR;}
+"var"                   {DEBUG_TOKEN("VAR");    return VAR;}
 "proc" |
-"verb"                  {DEBUG_TOKEN("PROC");return PROC;}
+"verb"                  {DEBUG_TOKEN("PROC");   return PROC;}
+"return"                {DEBUG_TOKEN("RETURN"); return RETURN;}
 
 %{/* Operators */%}
 "=" |

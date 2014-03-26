@@ -25,6 +25,7 @@ Slowly being turned into a fully-fledged DM interpreter.
 %token NUMBER
 %token OPERATOR 
 %token PROC
+%token RETURN
 %token RSHIFT 
 %token STRING 
 %token VAR
@@ -64,25 +65,27 @@ definitions
 	;
 
 vardef
-	: var_start INDENT variables DEDENT             {;}
+	: var_start INDENT variable_blocks DEDENT       {;}
 	| var_start '/' variable                        {;}
 	;
 	
 procdecl
 	: atomdecl '/' PROC '/' procdef                 { /* Set child proc to use atomdecl and be declarative */ }
 	| PROC '/' procdef                              { /* Proc *whatever = $2; whatever->setDeclarative(true); return whatever */ }
-	| PROC INDENT                                   { /* Set procs created "below" to declarative. */ }
+	| PROC INDENT procdefs DEDENT                   { /* Set procs created "below" to declarative. */ }
 	;
-	
+
+procdefs
+	: procdef 
+	| procdefs procdef
+	;
 procdef
-	: defname '(' arguments ')' INDENT              { /* return current->addProc($1,$3) */ }
+	: defname '(' arguments ')' INDENT procbody DEDENT { /* return current->addProc($1,$3) */ }
 	;
 	
 atomdef
 	: atomdecl INDENT                               {;}
 	| defname INDENT                                {;}
-	| DEDENT defname INDENT                         {;}
-	| INDENT defname INDENT                         {;}
 	;
 	
 atomdecl
@@ -100,52 +103,89 @@ atompath
 		} 
 		$$ = o;
 	}
-
+	;
 defname
 	: IDENTIFIER                                    { $$ = $1;}
 	;
 
 definition
-	: defname newlines definition_contents          {;}
-	| defname '/' definition                        {;}
+	: defname '/' definition                        {;}
 	| defname '/' vardef                            {;}
 	;
 		
 definition_contents
-	: INDENT definitions DEDENT opt_newlines
-	|
+	: /* empty */
+	| INDENT definitions DEDENT
 	;
 		
 var_start
 	: VAR                                           {;}
-
-arguments: variable                                     {;}
+	;
+	
+arguments
+	: variable                                      {;}
 	| variable ',' arguments                        {;}
 	|
 	;
 
+variabledefs
+	: variable_blocks
+	| variables
+	;
+
 variables
-	: variable variables
+	: /* empty */
+	| variable variables
+	;
+
+variable_blocks
+	: variable_block variable_blocks
+	;
+
+varname 
+	: IDENTIFIER                                    {;}
+	;
+	
+variable_block
+	: varname INDENT variable_contents DEDENT       {;}
+	;
+	
+variable
+	: atompath                                      {;}
+	| atompath '=' const_expression                 {;}
+	| var_start '/' variable                        {;}
+	;
+	
+variable_contents
+	: INDENT variables DEDENT
 	|
 	;
 
-varname: IDENTIFIER                                     {;}
+const_expression
+	: NUMBER
+	| STRING
+	| '(' const_expression ')'
+	| const_expression '+' const_expression
+	| const_expression '-' const_expression
+	| const_expression '*' const_expression
+	| const_expression '/' const_expression
+	| '-' const_expression %prec UMINUS
+	;
+	
+procbody // And here's where it gets hairy.
+	: /* empty */
+	| expressions
+	;
+	
+expressions
+	: expression
+	| expression expressions
+	;
 
-variable: varname newlines variable_contents            {;}
-		| varname '/' variable                  {;}
-		| varname '=' const_expression newlines {;}
-		
-variable_contents: INDENT variables DEDENT |
-
-const_expression: NUMBER | STRING | '(' const_expression ')' |
-		const_expression '+' const_expression |
-		const_expression '-' const_expression |
-		const_expression '*' const_expression |
-		const_expression '/' const_expression |
-		'-' const_expression %prec UMINUS
-		
-opt_newlines : newlines |		
-newlines: NEWLINE newlines | NEWLINE
+expression
+	: RETURN expression {;}
+	| const_expression
+	;
 %%
 
 #include <stdio.h>
