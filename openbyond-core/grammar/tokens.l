@@ -10,14 +10,16 @@
 
 //#define YY_DECL extern "C" int yylex()
 
-#define LEX_DEBUG(x) printf("%5d: %s\n",linenum,x)
+#define LEX_DEBUG(x) printf("%s",x)
 #define DEBUG_TOKEN(x) printf("%s ",x)
-#define DEBUG_EOL printf("\n")
+#define DEBUG_EOL 	printf("\n");
 
 #define DM_TAB_WIDTH 4
 
 /* globals to track current indentation */
 int current_line_indent = 0;   /* indentation of the current line */
+int indent_stack[200];         /* Stack of indents. */
+int current_indent_level = 0;  /* indentation of the current line */
 int bracket_indent_level = 0;  /* indentations given by brackets because BYOND is fucking dumb. */
 int indent_level = 0;          /* indentation level passed to the parser */
 
@@ -42,19 +44,33 @@ int linenum = 1;
 		//printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
 		unput(*yytext);
 		if (current_line_indent > indent_level) {
-			indent_level=current_line_indent;
+			indent_stack[current_indent_level++]=indent_level=current_line_indent;
 			DEBUG_TOKEN("INDENT");
 			return INDENT;
 		} else if (current_line_indent < indent_level) {
-			indent_level=current_line_indent;
+			current_indent_level--;
+			indent_level=indent_stack[current_indent_level--];
 			DEBUG_TOKEN("DEDENT");
+			DEBUG_EOL;
 			return DEDENT;
 		} else {
 			//LEX_DEBUG("<INITIAL>");
 			BEGIN INITIAL;
 		}
 	}
-
+<<EOF>>                {
+		//printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
+		current_line_indent=0;
+		if (current_indent_level>0) {
+			unput(*yytext);
+			current_indent_level--;
+			DEBUG_TOKEN("DEDENT");
+			DEBUG_EOL;
+			return DEDENT;
+		} else {
+			yyterminate();
+		}
+	}
 "\n" { 
 		/* Only handle block indents if we're not in a bracket indent. */
 		if(bracket_indent_level==0) {
@@ -132,7 +148,8 @@ int linenum = 1;
 %{/* Dump extraneous space */%}
 [ \t]+                  {;}
 
-<*>. { printf("Unidentified token %s.",yytext); }
+<*>. { /*if(yytext!="") printf("Unidentified token \"%s\".\n",yytext); */}
+
 %%
 
 

@@ -84,8 +84,8 @@ procdef
 	;
 	
 atomdef
-	: atomdecl INDENT                               {;}
-	| defname INDENT                                {;}
+	: atomdecl definition_contents                  {;}
+	| atompath definition_contents                  {;}
 	;
 	
 atomdecl
