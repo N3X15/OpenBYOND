@@ -53,7 +53,7 @@ int linenum = 1;
 			//LEX_DEBUG("<INITIAL>");
 			//DEBUG_TOKEN("NEWLINE");
 			BEGIN INITIAL;
-			return ;//NEWLINE;
+			//return NEWLINE;
 		}
 	}
 
@@ -114,8 +114,9 @@ int linenum = 1;
 <MULTISTRING>\n         { DEBUG_EOL; linenum++; }
 
 %{/* Keywords */%}
-var                     {DEBUG_TOKEN("VAR");return VAR;}
-proc|verb               {DEBUG_TOKEN("PROC");return PROC;}
+"var"                   {DEBUG_TOKEN("VAR");return VAR;}
+"proc" |
+"verb"                  {DEBUG_TOKEN("PROC");return PROC;}
 
 %{/* Operators */%}
 "=" |
@@ -134,7 +135,7 @@ proc|verb               {DEBUG_TOKEN("PROC");return PROC;}
 %{/* Dump extraneous space */%}
 [ \t]+                  {;}
 
-
+<*>. { printf("Unidentified token %s.",yytext); }
 %%
 
 

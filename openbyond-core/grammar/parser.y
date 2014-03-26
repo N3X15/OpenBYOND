@@ -39,6 +39,7 @@ Slowly being turned into a fully-fledged DM interpreter.
 }
 
 %type <strval> IDENTIFIER;
+%type <strval> defname atompath
 
 %{
 
@@ -48,108 +49,91 @@ Slowly being turned into a fully-fledged DM interpreter.
 
 #include "parser.tab.h"
 
-/* Here be dragons, and the type tree that'll eventually be replaced. */
-
-struct Typelist {
-	void* contents;
-	void* next;
-} typedef Typelist;
-
-struct Type {
-	char* name;
-	Typelist* children;
-	void* parent;
-} typedef Type;
-
-Type root;
-Type* current;
-
-Type* addType(char *name) {
-	Type* ret = (Type*)malloc(sizeof(Type));
-	ret->name = name;
-	ret->children = NULL;
-	ret->parent = current;
-	
-	if(current->children == NULL) {
-		current->children = (Typelist*)malloc(sizeof(Typelist));
-		current->children->next = NULL;
-		current->children->contents = ret;
-	} else {
-	
-		Typelist* it = current->children;
-		while(it->next != NULL)
-		{
-			it = (Typelist*) it->next;
-		}
-	
-		it->next = malloc(sizeof(Typelist));
-		it = (Typelist*) it->next;
-		it->next = NULL;
-		it->contents = ret;
-	}
-	
-	return ret;
-};
-
-void printTypes(Type* base, int depth) {
-	int i = 0;
-	for(i = 0; i < depth; i++) {printf("\t");}
-	printf("%s\n", base->name);
-	
-	Typelist* it = base->children;
-	while(it != NULL) {
-		printTypes((Type*) it->contents, depth + 1);
-		it = (Typelist*) it->next;
-	}
-}
-
-//extern "C" int yylex();
-
 %}
 
 %error-verbose
 
 %%
 
-definitions: definition definitions 
+definitions
+	: /* empty */
+	| definition definitions 
 	| vardef definitions 
 	| atomdef definitions
-	| procdef definitions
-	|
+	| procdecl definitions
+	;
 
-vardef:   var_start INDENT variables DEDENT             {current = (Type*) current->parent;}
-	| var_start '/' variable                        {current = (Type*) current->parent;}
+vardef
+	: var_start INDENT variables DEDENT             {;}
+	| var_start '/' variable                        {;}
+	;
 	
-procdef:  atomdecl '(' arguments ')' INDENT	
+procdecl
+	: atomdecl '/' PROC '/' procdef                 { /* Set child proc to use atomdecl and be declarative */ }
+	| PROC '/' procdef                              { /* Proc *whatever = $2; whatever->setDeclarative(true); return whatever */ }
+	| PROC INDENT                                   { /* Set procs created "below" to declarative. */ }
+	;
 	
-atomdef:  atomdecl INDENT                               {current = (Type*) current->parent;}
-	| defname INDENT                                {current = (Type*) current->parent;}
-	| DEDENT defname                                {current = (Type*) current->parent;}
-	| INDENT defname                                {current = (Type*) current->parent;}
+procdef
+	: defname '(' arguments ')' INDENT              { /* return current->addProc($1,$3) */ }
+	;
 	
-atomdecl: '/' defname                                   {current = (Type*) current->parent;}
+atomdef
+	: atomdecl INDENT                               {;}
+	| defname INDENT                                {;}
+	| DEDENT defname INDENT                         {;}
+	| INDENT defname INDENT                         {;}
+	;
+	
+atomdecl
+	: '/' atompath                                  { /*return new Atom($2);*/ }
+	;
+	
+atompath
+	: defname                                       { $$ = $1; }
+	| defname '/' atompath                          { 
+		char *o; 
+		int size = asprintf(&o, "%s/%s",$1,$3);
+		if(size<0) {
+			$$ = NULL;
+			return;
+		} 
+		$$ = o;
+	}
 
-defname: IDENTIFIER                                     {current = addType($1);}
+defname
+	: IDENTIFIER                                    { $$ = $1;}
+	;
 
-definition: defname newlines definition_contents        {current = (Type*) current->parent;}
-	| defname '/' definition                        {current = (Type*) current->parent;}
-	| defname '/' vardef                            {current = (Type*) current->parent;}
+definition
+	: defname newlines definition_contents          {;}
+	| defname '/' definition                        {;}
+	| defname '/' vardef                            {;}
+	;
 		
-definition_contents: INDENT definitions DEDENT opt_newlines
+definition_contents
+	: INDENT definitions DEDENT opt_newlines
 	|
+	;
 		
-var_start: VAR                                          {current = addType("var");}
+var_start
+	: VAR                                           {;}
 
-arguments: variable                                     {current = (Type*) current->parent;}
-	| variable ',' arguments                        {current = (Type*) current->parent;}
+arguments: variable                                     {;}
+	| variable ',' arguments                        {;}
 	|
+	;
 
-variables: variable variables |
+variables
+	: variable variables
+	|
+	;
 
-varname: IDENTIFIER                                     {current = addType($1);}
-variable: varname newlines variable_contents            {current = (Type*) current->parent;}
-		| varname '/' variable                  {current = (Type*) current->parent;}
-		| varname '=' const_expression newlines {current = (Type*) current->parent;}
+varname: IDENTIFIER                                     {;}
+
+variable: varname newlines variable_contents            {;}
+		| varname '/' variable                  {;}
+		| varname '=' const_expression newlines {;}
 		
 variable_contents: INDENT variables DEDENT |
 
@@ -167,11 +151,6 @@ newlines: NEWLINE newlines | NEWLINE
 #include <stdio.h>
 
 int main() {
-	current = &root;
-	current->name = "root";
-	current->children = NULL;
-	current->parent = current;
+	printf("OpenBYOND DM Test Parser\n");
 	yyparse();
-	printf("\nOpenBYOND DM Test Parser\n");
-	printTypes(&root, 0);
 }
