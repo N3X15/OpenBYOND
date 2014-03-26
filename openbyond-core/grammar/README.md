@@ -3,7 +3,8 @@
 *FOR THE LOVE OF GOD, DON'T TOUCH THIS UNLESS YOU KNOW WHAT YOU'RE DOING!*
 
 This directory contains the files specifying how DMScript is parsed by OpenBYOND.  The grammar was originally written 
-by nan0desu (
+by nan0desu (https://github.com/nan0desu/dreamcatcher), but has been extended to be more robust and cover more edge
+cases.
 
 ## tokens.l
 

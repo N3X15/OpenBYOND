@@ -10,7 +10,7 @@
 
 //#define YY_DECL extern "C" int yylex()
 
-#define LEX_DEBUG(x) printf("[%d] %s\n",linenum,x)
+#define LEX_DEBUG(x) printf("%5d: %s\n",linenum,x)
 
 #define DM_TAB_WIDTH 4
 
@@ -33,7 +33,7 @@ int linenum = 1;
 
 %%
 <INDENT_PROCESSING>" "  { LEX_DEBUG("\\s");current_line_indent++; }
-<INDENT_PROCESSING>"\t" { LEX_DEBUG("\\t");current_line_indent = (current_line_indent + DM_TAB_WIDTH) & ~(DM_TAB_WIDTH-1); }
+<INDENT_PROCESSING>"\t" { LEX_DEBUG("\\t");current_line_indent = (current_line_indent + 4) & ~3; }
 <INDENT_PROCESSING>"\n" { LEX_DEBUG("\\n");current_line_indent = 0; linenum++; /*ignoring blank line */ }
 <INDENT_PROCESSING>.    {
 		unput(*yytext);
@@ -51,13 +51,13 @@ int linenum = 1;
 	}
 
 "\n" { 
+		LEX_DEBUG("NEWLINE");
 		/* Only handle block indents if we're not in a bracket indent. */
 		if(bracket_indent_level==0) {
 			current_line_indent = 0;
 			BEGIN INDENT_PROCESSING; 
 		}
 		linenum++;
-		LEX_DEBUG("NEWLINE");
 		return NEWLINE;
 	}
 
@@ -105,8 +105,6 @@ int linenum = 1;
 var                     {LEX_DEBUG("VAR");return VAR;}
 proc|verb               {LEX_DEBUG("PROC");return PROC;}
 
-[a-zA-Z_][a-zA-Z0-9_]*	{ yylval.strval=strdup(yytext);LEX_DEBUG("IDENTIFIER");return IDENTIFIER; }
-
 %{/* Operators */%}
 "=" |
 "+" |
@@ -114,7 +112,9 @@ proc|verb               {LEX_DEBUG("PROC");return PROC;}
 "*" |
 "/" |
 "(" |
-")"                     {LEX_DEBUG(yytext[0]);return yytext[0];}
+")"                     {LEX_DEBUG(yytext);return yytext[0];}
+
+[a-zA-Z_][a-zA-Z0-9_]*	{ yylval.strval=strdup(yytext);LEX_DEBUG("IDENTIFIER");return IDENTIFIER; }
 
 [1-9][0-9]*             {LEX_DEBUG("NUMBER");return NUMBER;}
 [1-9][0-9]*\.[0-9]+     {LEX_DEBUG("NUMBER");return NUMBER;}
