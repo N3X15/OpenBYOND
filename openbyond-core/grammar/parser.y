@@ -37,7 +37,7 @@ struct Type {
 } typedef Type;
 
 int yyerror (const char *s)
-{                                                     
+{
     printf("Parser error:%d: %s \n ",s);
     return 0;
 }
@@ -45,14 +45,14 @@ int yyerror (const char *s)
 Type root;
 Type* current;
 
-Type* addType(char* name) {
-	Type* ret = (Type *)malloc(sizeof(Type));
+Type* addType(char *name) {
+	Type* ret = (Type*)malloc(sizeof(Type));
 	ret->name = name;
 	ret->children = NULL;
 	ret->parent = current;
 	
 	if(current->children == NULL) {
-		current->children = (Typelist *)malloc(sizeof(Typelist));
+		current->children = (Typelist*)malloc(sizeof(Typelist));
 		current->children->next = NULL;
 		current->children->contents = ret;
 	} else {
@@ -84,7 +84,7 @@ void printTypes(Type* base, int depth) {
 	}
 }
 
-extern "C" int yylex();
+//extern "C" int yylex();
 
 %}
 %error-verbose
@@ -100,6 +100,7 @@ defname: IDENTIFIER {current = addType($1);}
 definition: defname newlines definition_contents	{current = (Type*) current->parent;}
 		| defname '/' definition 					{current = (Type*) current->parent;}
 		| defname '/' vardef						{current = (Type*) current->parent;}
+		| '/' definition
 		
 definition_contents: INDENT definitions DEDENT opt_newlines
 		|
