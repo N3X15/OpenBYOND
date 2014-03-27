@@ -48,7 +48,7 @@ Slowly being turned into a fully-fledged DM interpreter.
 #include <string.h>
 #include <stdio.h>
 
-#include "parser.tab.h"
+#include "parser.hpp"
 
 %}
 

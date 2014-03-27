@@ -1,5 +1,5 @@
 /*
-Atom Definition
+String Utilities
 
 Copyright (c) 2014 Rob "N3X15" Nelson
 
@@ -21,19 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "Atom.h"
+#ifndef HAVE_STRING_UTILS_H
+#define HAVE_STRING_UTILS_H
 
-Atom::Atom(std::string path, std::string filename, unsigned int line):
-	properties(),
-	mapSpecified(),
-	children(),
-	line(line),
-	filename(filename),
-	path(path),
-	ob_inherited(false)
-{}
+#include <string>
+std::string string_format(const std::string fmt_str, ...);
 
-
-Atom::~Atom(void)
-{
-}
+#endif // HAVE_STRING_UTILS_H

@@ -22,32 +22,55 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "Value.h"
+#include <string>
 
-Value::Value(std::string filename = "", unsigned int line=0, std::string typepath="/"):
+#include "Value.h"
+#include "string_utils.h"
+
+BaseValue::BaseValue(std::string filename, unsigned int line, std::string typepath):
 	filename(filename),
 	line(line),
 	type(typepath)
 {
 }
 
-Value::~Value(void)
+BaseValue::~BaseValue(void)
 {}
 
-std::string Value::ToString()
+std::string BaseValue::ToString()
 {
-	return std::to_string(this->value);
+	return NULL;
+}
+
+std::string IntegerValue::ToString()
+{ 
+	return string_format("%d",this->value); 
+}
+std::string FloatValue::ToString()
+{ 
+	return string_format("%f",this->value); 
+}
+
+////////////////////////////////////
+// STRING SHIT
+////////////////////////////////////
+
+StringValue::StringValue(std::string data, std::string filename, unsigned int line, std::string typepath) :
+	Value<std::string>(filename,line,typepath)
+{
+	value = data;
+}
+
+std::string StringValue::ToString()
+{
+	return string_format("\"%s\"",value);
 }
 
 ////////////////////////////////////
 // FILE REF SHIT
 ////////////////////////////////////
 
-FileRefValue::FileRefValue(std::string filepath, std::string filename = "", unsigned int line=0, std::string typepath="/") :
-	Value(filename,line,typepath)
+std::string FileRefValue::ToString()
 {
-	*value = filepath;
+	return string_format("'%s'",value);
 }
-
-FileRefValue::~FileRefValue(void)
-{}

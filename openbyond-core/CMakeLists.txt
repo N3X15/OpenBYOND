@@ -32,8 +32,6 @@ BISON_TARGET(DMParser ${CMAKE_CURRENT_SOURCE_DIR}/grammar/parser.y ${CMAKE_CURRE
 FLEX_TARGET(DMScanner ${CMAKE_CURRENT_SOURCE_DIR}/grammar/tokens.l ${CMAKE_CURRENT_BINARY_DIR}/grammar/tokens.cpp)
 ADD_FLEX_BISON_DEPENDENCY(DMScanner DMParser)
 
-#
-
 # Add the include folder to the include path
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -42,10 +40,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # BASIC TYPES
 ##################
 set(BASICS_SOURCE
+	${CMAKE_CURRENT_SOURCE_DIR}/src/string_utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Atom.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Value.cpp
 	)
 set(BASICS_INCLUDE
+	${CMAKE_CURRENT_SOURCE_DIR}/include/string_utils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Atom.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Value.h
 	)
@@ -62,8 +62,17 @@ set(DMSCRIPT_SOURCE
 	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/ObjectTree.cpp
 	)
 set(DMSCRIPT_INCLUDE
+	${CMAKE_CURRENT_BINARY_DIR}/grammar/parser.hpp
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/ObjectTree.h
 	)
+
+set(DMSCRIPT_RULES
+	${CMAKE_CURRENT_SOURCE_DIR}/grammar/parser.y
+	${CMAKE_CURRENT_SOURCE_DIR}/grammar/tokens.l
+	)
+
+# Add the flex and bison rules to any IDEs.
+SOURCE_GROUP("grammar\\" FILES ${DMSCRIPT_RULES})
 
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_INCLUDE})
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_SOURCE})

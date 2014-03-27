@@ -1,10 +1,13 @@
+%top {
+#define YY_NO_UNISTD_H
+%}
 %{
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <stdbool.h>
+//#include <stdbool.h>
 
-#include "parser.tab.h"
+#include "parser.hpp"
 
 #define MAX_DEPTH 72
 

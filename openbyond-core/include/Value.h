@@ -30,12 +30,13 @@ THE SOFTWARE.
 #define SPECIAL_GLOBAL (1 << 1)
 #define SPECIAL_CONST  (1 << 2)
 
-class Value
+// Use this in type
+class BaseValue
 {
-public:
-    // The actual value.
-    void* value;
-        
+public: 
+	// oh god what am I doing
+	// T value;
+
     // Filename this was found in
     std::string filename;
         
@@ -57,31 +58,51 @@ public:
     // If a list, what's the size?
     unsigned int size;
 
-	Value(std::string filename = "", unsigned int line=0, std::string typepath="/");
-	~Value(void);
+	BaseValue(std::string filename = "", unsigned int line=0, std::string typepath="/");
+	~BaseValue(void);
 
-	virtual Value *copy();
+	virtual BaseValue *copy();
 	virtual std::string ToString();
 };
 
-class FileRefValue: Value
+// Since this only accepts a few select types...
+template <typename T> 
+class Value : public BaseValue
 {
 public:
-    // The actual value.
-    std::string *value;
+	Value(std::string filename = "", unsigned int line=0, std::string typepath="/");
+	~Value();
 
-	FileRefValue(std::string filepath, std::string filename = "", unsigned int line=0, std::string typepath="/");
-	~FileRefValue(void);
+	T value;
 };
 
-class StringValue: Value
+class IntegerValue: public Value<int> 
+{
+	std::string ToString();
+};
+
+class FloatValue: public Value<float> 
+{
+	std::string ToString();
+};
+
+// Strings can be multiline and require additional formatting.
+class StringValue: public Value<std::string>
 {
 public:
-    // The actual value.
-    std::string *value;
-
 	StringValue(std::string data, std::string filename = "", unsigned int line=0, std::string typepath="/");
 	~StringValue(void);
+
+	std::string ToString();
 };
 
+// FileRefs are like strings, except refer to a file and require special formatting.
+class FileRefValue: public StringValue
+{
+public:
+	FileRefValue(std::string filepath, std::string filename = "", unsigned int line=0, std::string typepath="/");
+	~FileRefValue(void);
+
+	std::string ToString();
+};
 #endif

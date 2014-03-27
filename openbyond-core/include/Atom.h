@@ -38,7 +38,7 @@ THE SOFTWARE.
 class Atom
 {
 public:
-	typedef std::map<std::string,Value> ValueMap;
+	typedef std::map<std::string,BaseValue> ValueMap;
 
     // Absolute path of this atom
     std::string path;
