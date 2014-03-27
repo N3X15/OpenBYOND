@@ -5,3 +5,10 @@
 /openbyond-core/grammar/test.exe.stackdump
 /build
 /openbyond-core/bin/Debug/*.pdb
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+Makefile
+
