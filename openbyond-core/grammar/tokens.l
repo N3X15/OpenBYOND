@@ -25,22 +25,25 @@ THE SOFTWARE.
 
 // No unistd.h pls
 #define YY_NO_UNISTD_H
-%}
+}
 %{
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-//#include <stdbool.h>
+#include "scripting/DMLexer.h"
 
-#include "parser.hpp"
+typedef DM::Parser::token      token;
+typedef DM::Parser::token_type token_type;
+
+/* By default yylex returns int, we use token_type. Unfortunately yyterminate
+ * by default returns 0, which is not of token_type. */
+#define yyterminate() return token::END
 
 #define MAX_DEPTH 72
 
-//#define YY_DECL extern "C" int yylex()
-
-#define LEX_DEBUG(x) printf("%s",x)
+#define LEX_DEBUG(x)   printf("%s",x)
 #define DEBUG_TOKEN(x) printf("%s ",x)
-#define DEBUG_EOL 	printf("\n");
+#define DEBUG_EOL      printf("\n");
 
 #define DM_TAB_WIDTH 4
 
@@ -60,8 +63,10 @@ int linenum = 1;
 %x INDENT_PROCESSING
 %x STRING_STATE
 %x MULTISTRING
-    
+
+%option yyclass="Lexer"
 %option noyywrap
+%option c++
 %option yylineno
 
 %%
@@ -74,13 +79,13 @@ int linenum = 1;
 		if (current_line_indent > indent_level) {
 			indent_stack[current_indent_level++]=indent_level=current_line_indent;
 			DEBUG_TOKEN("INDENT");
-			return INDENT;
+			return token::INDENT;
 		} else if (current_line_indent < indent_level) {
 			current_indent_level--;
 			indent_level=indent_stack[current_indent_level--];
 			DEBUG_TOKEN("DEDENT");
 			DEBUG_EOL;
-			return DEDENT;
+			return token::DEDENT;
 		} else {
 			//LEX_DEBUG("<INITIAL>");
 			BEGIN INITIAL;
@@ -94,7 +99,7 @@ int linenum = 1;
 			current_indent_level--;
 			DEBUG_TOKEN("DEDENT");
 			DEBUG_EOL;
-			return DEDENT;
+			return token::DEDENT;
 		} else {
 			yyterminate();
 		}
@@ -110,8 +115,8 @@ int linenum = 1;
 	}
 
 %{ /* Bracket "indents".  BYOND is stupid. */ %}
-"{"                     { bracket_indent_level++; DEBUG_TOKEN("INDENT"); return INDENT; }
-"}"                     { DEBUG_TOKEN("DEDENT");assert(bracket_indent_level>0); bracket_indent_level--; return DEDENT; }
+"{"                     { bracket_indent_level++; DEBUG_TOKEN("INDENT"); return token::INDENT; }
+"}"                     { DEBUG_TOKEN("DEDENT");assert(bracket_indent_level>0); bracket_indent_level--; return token::DEDENT; }
 
 %{ 
 /* Beginning of nan0desu's lexer rules. */ 
@@ -139,25 +144,25 @@ int linenum = 1;
 		linenum++; 
 		BEGIN INITIAL; 
 		yyless(0); 
-		return STRING;
+		return token::STRING;
 	}
 <STRING_STATE>\\.       { ;}
 <STRING_STATE>\\\n      { DEBUG_EOL; linenum++; }
-<STRING_STATE>\"        { BEGIN INITIAL; DEBUG_TOKEN("STRING");return STRING; }
+<STRING_STATE>\"        { BEGIN INITIAL; DEBUG_TOKEN("STRING");return token::STRING; }
 <STRING_STATE>.         { ; }
 
 \{\"                    { BEGIN MULTISTRING; }
 <MULTISTRING>\\.        { ; }
 <MULTISTRING>\\\n       { DEBUG_EOL; linenum++; }
-<MULTISTRING>\"\}       { BEGIN INITIAL; DEBUG_TOKEN("STRING");return STRING; }
+<MULTISTRING>\"\}       { BEGIN INITIAL; DEBUG_TOKEN("STRING");return token::STRING; }
 <MULTISTRING>.          { ; }
 <MULTISTRING>\n         { DEBUG_EOL; linenum++; }
 
 %{/* Keywords */%}
-"var"                   {DEBUG_TOKEN("VAR");    return VAR;}
+"var"                   {DEBUG_TOKEN("VAR");    return token::VAR;}
 "proc" |
-"verb"                  {DEBUG_TOKEN("PROC");   return PROC;}
-"return"                {DEBUG_TOKEN("RETURN"); return RETURN;}
+"verb"                  {DEBUG_TOKEN("PROC");   return token::PROC;}
+"return"                {DEBUG_TOKEN("RETURN"); return token::RETURN;}
 
 %{/* Operators */%}
 "=" |
@@ -166,12 +171,12 @@ int linenum = 1;
 "*" |
 "/" |
 "(" |
-")"                     {DEBUG_TOKEN(yytext);return yytext[0];}
+")"                     {DEBUG_TOKEN(yytext);return static_cast<token_type>(*yytext);}
 
-[a-zA-Z_][a-zA-Z0-9_]*	{DEBUG_TOKEN("IDENTIFIER");yylval.strval=strdup(yytext);return IDENTIFIER; }
+[a-zA-Z_][a-zA-Z0-9_]*	{DEBUG_TOKEN("IDENTIFIER");yylval->strval=strdup(yytext);return token::IDENTIFIER; }
 
-[1-9][0-9]*             {DEBUG_TOKEN("NUMBER");return NUMBER;}
-[1-9][0-9]*\.[0-9]+     {DEBUG_TOKEN("NUMBER");return NUMBER;}
+[1-9][0-9]*             {DEBUG_TOKEN("NUMBER");return token::NUMBER;}
+[1-9][0-9]*\.[0-9]+     {DEBUG_TOKEN("NUMBER");return token::NUMBER;}
 
 %{/* Dump extraneous space */%}
 [ \t]+                  {;}
@@ -183,6 +188,6 @@ int linenum = 1;
 
 int yyerror (const char *s)
 {
-    printf("Parser error[%d]: %s \n",yylineno,s);
+    printf("Parser error[%d]: %s \n",linenum,s);
     return 0;
 }

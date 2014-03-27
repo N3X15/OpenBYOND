@@ -24,10 +24,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+%skeleton "lalr1.cc"
+%require "2.3"
+%defines
+%define "parser_class_name" "Parser"
+%define "namespace" "DM"
 
 %token AS 
 %token DECREMENT 
 %token DEDENT
+%token END
 %token EQUAL 
 %token EXPONENT 
 %token GEQUAL 
@@ -66,10 +72,30 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
+#include "string_utils.h"
 #include "parser.hpp"
+#include "scripting/Driver.h"
+#include "scripting/DMLexer.h"
 
+#undef yylex
+#define yylex driver.lexer->lex
 %}
+/* keep track of the current position within the input */
+%locations
+%initial-action
+{
+    // initialize the initial location object
+    @$.begin.filename = @$.end.filename = &driver.streamname;
+};
+
+
+
+
+/* The driver is passed by reference to the parser and to the scanner. This
+ * provides a simple but effective pure interface, not relying on global
+ * variables. */
+%parse-param {class Driver& driver}
+%debug
 
 %error-verbose
 
@@ -118,9 +144,9 @@ atompath
 		int size = asprintf(&o, "%s/%s",$1,$3);
 		if(size<0) {
 			$$ = NULL;
-			return;
-		} 
-		$$ = o;
+		} else {
+			$$ = o;
+		}
 	}
 	;
 defname
@@ -208,8 +234,9 @@ expression
 %%
 
 #include <stdio.h>
-
+/*
 int main() {
 	printf("OpenBYOND DM Test Parser\n");
 	yyparse();
 }
+*/

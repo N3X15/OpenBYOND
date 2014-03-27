@@ -32,8 +32,18 @@ BISON_TARGET(DMParser ${CMAKE_CURRENT_SOURCE_DIR}/grammar/parser.y ${CMAKE_CURRE
 FLEX_TARGET(DMScanner ${CMAKE_CURRENT_SOURCE_DIR}/grammar/tokens.l ${CMAKE_CURRENT_BINARY_DIR}/grammar/tokens.cpp)
 ADD_FLEX_BISON_DEPENDENCY(DMScanner DMParser)
 
+if (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NOTFOUND")
+	# Last resort: Check lib/FlexLexer.h
+	find_path(FLEX_INCLUDE_DIR
+		NAMES
+			FlexLexer.h
+		PATHS
+			../lib/
+  )
+endif (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NOTFOUND")
+
 # Add the include folder to the include path
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${FLEX_INCLUDE_DIR})
 
 # Set the source files, headers, and link libraries
 ##################
@@ -57,22 +67,16 @@ SOURCE_GROUP("src\\" FILES ${BASICS_SOURCE})
 ## SCRIPTING
 ##################
 set(DMSCRIPT_SOURCE
-	${CMAKE_CURRENT_BINARY_DIR}/grammar/parser.cpp
-	${CMAKE_CURRENT_BINARY_DIR}/grammar/tokens.cpp
+	${FLEX_DMScanner_OUTPUTS}
+	${BISON_DMParser_OUTPUTS}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/ObjectTree.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/Driver.cpp
 	)
 set(DMSCRIPT_INCLUDE
-	${CMAKE_CURRENT_BINARY_DIR}/grammar/parser.hpp
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/ObjectTree.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/DMLexer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/Driver.h
 	)
-
-set(DMSCRIPT_RULES
-	${CMAKE_CURRENT_SOURCE_DIR}/grammar/parser.y
-	${CMAKE_CURRENT_SOURCE_DIR}/grammar/tokens.l
-	)
-
-# Add the flex and bison rules to any IDEs.
-SOURCE_GROUP("grammar\\" FILES ${DMSCRIPT_RULES})
 
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_INCLUDE})
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_SOURCE})
