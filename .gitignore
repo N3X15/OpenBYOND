@@ -3,3 +3,5 @@
 /openbyond-core/grammar/parser.tab.h
 /openbyond-core/grammar/test.exe
 /openbyond-core/grammar/test.exe.stackdump
+/build
+/openbyond-core/bin/Debug/*.pdb

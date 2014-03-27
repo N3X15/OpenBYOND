@@ -1,5 +1,5 @@
 /*
-Atom Definition
+Object Tree
 
 Copyright (c) 2014 Rob "N3X15" Nelson
 
@@ -21,19 +21,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "Atom.h"
-
-Atom::Atom(std::string path, std::string filename = "", unsigned int line = 0):
-	properties(),
-	mapSpecified(),
-	children(),
-	line(line),
-	filename(filename),
-	path(path),
-	ob_inherited(false)
-{}
-
-
-Atom::~Atom(void)
-{
-}

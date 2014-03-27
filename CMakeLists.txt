@@ -41,9 +41,9 @@ set (MODULES
 # available to all modules globally.
 # You can achieve this using include_directories in the root CMakeLists.txt
 # before loading the modules.
-foreach ( MODULE ${MODULES} )
-  include_directories ( "${MODULE}/include/" )
-endforeach ()
+#foreach ( MODULE ${MODULES} )
+#  include_directories ( "${MODULE}/include/" )
+#endforeach ()
 
 #
 # After adding the include paths, the only remaining thing is to 
