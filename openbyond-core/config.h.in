@@ -1,0 +1,6 @@
+/**********************************************
+* CMake changes this.  Don't touch unless you
+* Know what you're doing.
+***********************************************/
+
+#cmakedefine HAVE_VASPRINTF

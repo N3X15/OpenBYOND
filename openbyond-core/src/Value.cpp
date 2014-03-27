@@ -44,11 +44,11 @@ std::string BaseValue::ToString()
 
 std::string IntegerValue::ToString()
 { 
-	return string_format("%d",this->value); 
+	return string_format("%d",(int)this->value); 
 }
 std::string FloatValue::ToString()
 { 
-	return string_format("%f",this->value); 
+	return string_format("%f",(float)this->value); 
 }
 
 ////////////////////////////////////
@@ -63,7 +63,7 @@ StringValue::StringValue(std::string data, std::string filename, unsigned int li
 
 std::string StringValue::ToString()
 {
-	return string_format("\"%s\"",value);
+	return string_format("\"%s\"",value.c_str());
 }
 
 ////////////////////////////////////
@@ -72,5 +72,5 @@ std::string StringValue::ToString()
 
 std::string FileRefValue::ToString()
 {
-	return string_format("'%s'",value);
+	return string_format("'%s'",value.c_str());
 }

@@ -25,6 +25,14 @@ find_package(allegro 5.0 REQUIRED COMPONENTS
 #include_directories(${allegro_INCLUDE_DIRS})
 #list(APPEND ${PROJECT_NAME}_LINK_LIBS ${allegro_LIBRARIES})
 
+include(CheckFunctionExists)
+CHECK_FUNCTION_EXISTS("vasprintf" HAVE_VASPRINTF)
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+
+
 #
 # Every module has a CMakeLists.txt in it's root. 
 set (MODULES 

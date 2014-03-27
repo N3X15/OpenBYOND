@@ -21,11 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+#include "config.h"
 #include "string_utils.h"
 #include <string>
 #include <memory>
 #include <cstdarg>
+#include <cstring>
+#include <errno.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
 /**
 http://stackoverflow.com/a/8098080
@@ -73,11 +78,6 @@ extern int vsnprintf();
 /* Include vasprintf() if not on your OS. */
 #ifndef HAVE_VASPRINTF
 
-#include <errno.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdlib.h>
-
 #ifndef VA_COPY
 # ifdef HAVE_VA_COPY
 #  define VA_COPY(dest, src) va_copy(dest, src)
@@ -92,8 +92,7 @@ extern int vsnprintf();
 
 #define INIT_SZ 128
 
-int
-vasprintf(char **str, const char *fmt, va_list ap)
+int vasprintf(char **str, const char *fmt, va_list ap)
 {
         int ret = -1;
         va_list ap2;

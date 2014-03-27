@@ -23,10 +23,13 @@ THE SOFTWARE.
 */
 #ifndef HAVE_STRING_UTILS_H
 #define HAVE_STRING_UTILS_H
-
+#include "config.h"
 #include <string>
 std::string string_format(const std::string fmt_str, ...);
 
+/* Include vasprintf() if not on your OS. */
+#ifndef HAVE_VASPRINTF
 int vasprintf(char **str, const char *fmt, va_list ap);
 int asprintf(char **str, const char *fmt, ...);
+#endif
 #endif // HAVE_STRING_UTILS_H

@@ -63,10 +63,6 @@ public:
     /** Pointer to the current lexer instance, this is used to connect the
      * parser to the scanner. It is used in the yylex macro. */
     class Lexer* lexer;
-
-    /** Reference to the calculator context filled during parsing of the
-     * expressions. */
-    class CalcContext& calc;
 };
 }
 
