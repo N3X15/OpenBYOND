@@ -9,8 +9,8 @@
 */
 template <typename T, class A>
 std::vector<T,A> VectorCopy(std::vector<T,A> origin, int start = 0, int end = 0, int step = 1) {
-	std::vector<T,A>::size_type _start;
-	std::vector<T,A>::size_type _end;
+	typename std::vector<T,A>::size_type _start;
+	typename std::vector<T,A>::size_type _end;
 	if(start<0)
 	{
 		_start = start + origin.size() - 1;

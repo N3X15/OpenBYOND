@@ -62,20 +62,20 @@ void ObjectTree::BuildTree() {
 			// Figure out where we are.
 			path_item = truncatedpath[i];
 			cpath.push_back(path_item);
-            cpath_str = string_join("/",cpath);
+			cpath_str = string_join("/",cpath);
 			if(cNode->children.count(path_item)==1) {
-                if(this->atoms.count(cpath_str)==1){
-                    cNode->children[path_item] = &this->atoms[cpath_str];
+				if(this->atoms.count(cpath_str)==1){
+					cNode->children[path_item] = &this->atoms[cpath_str];
 				} else {
-                    //if '(' in path_item:
-                    //    cNode.children[path_item] = Proc('/'.join([''] + cpath), [])
-                    //else:
-                    cNode->children[path_item] = new Atom("/"+string_join("/",cpath));
+					//if '(' in path_item:
+					//    cNode.children[path_item] = Proc('/'.join([''] + cpath), [])
+					//else:
+					cNode->children[path_item] = new Atom("/"+string_join("/",cpath));
 				}
 				parent_type = cNode->children[path_item]->getProperty("parent_type",cNode->path);
-                cNode->children[path_item]->parent = cNode;
+				cNode->children[path_item]->parent = cNode;
 				if(parent_type != cNode->path) {
-					printf(" - Parent of %s forced to be %s",cNode->children[path_item]->path, parent_type);
+					printf(" - Parent of %s forced to be %s",cNode->children[path_item]->path.c_str(), parent_type.c_str());
 					cNode->children[path_item]->parent = &this->atoms[parent_type];
 				}
 			}
