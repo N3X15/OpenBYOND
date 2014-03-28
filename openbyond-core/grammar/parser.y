@@ -232,3 +232,7 @@ expression
 	| const_expression
 	;
 %%
+void DM::Parser::error(const Parser::location_type& l, const std::string& m)
+{
+    driver.error(l, m);
+}

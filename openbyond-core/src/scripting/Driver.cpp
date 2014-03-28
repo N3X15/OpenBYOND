@@ -1,5 +1,6 @@
-// $Id$
-/** \file driver.cc Implementation of the example::Driver class. */
+/**
+* DMScript Driver
+*/
 
 #include <fstream>
 #include <sstream>

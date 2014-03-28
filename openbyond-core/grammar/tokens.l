@@ -56,6 +56,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 
 /* Current position */
 int linenum = 1;
+/* %option yyclass="BaseLexer" */
 %}
 
 %x COMMENT
@@ -64,7 +65,6 @@ int linenum = 1;
 %x STRING_STATE
 %x MULTISTRING
 
-%option yyclass="BaseLexer"
 %option noyywrap
 %option c++
 %option yylineno
@@ -187,7 +187,7 @@ int linenum = 1;
 
 namespace DM {
 Lexer::Lexer(std::istream* in, std::ostream* out)
-    : BaseLexer(in, out)
+    : yyFlexLexer(in, out)
 {
 }
 
@@ -215,7 +215,7 @@ void Lexer::set_debug(bool b)
 #undef yylex
 #endif
 
-int BaseLexer::yylex()
+int yyFlexLexer::yylex()
 {
     std::cerr << "in Lexer::yylex() !" << std::endl;
     return 0;
@@ -226,12 +226,12 @@ int BaseLexer::yylex()
  * assumed that the function has gone ahead and set up `yyin' to point to
  * another input file, and scanning continues. If it returns true (non-zero),
  * then the scanner terminates, returning 0 to its caller. */
-
-int BaseLexer::yywrap()
+/*
+int yyFlexLexer::yywrap()
 {
     return 1;
 }
-
+*/
 int yyerror (const char *s)
 {
     printf("Parser error[%d]: %s \n",linenum,s);

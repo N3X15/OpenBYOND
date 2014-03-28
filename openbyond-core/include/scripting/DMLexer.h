@@ -1,10 +1,11 @@
 #ifndef __DMSCANNER_H__
 #define __DMSCANNER_H__
- 
-#define yyFlexLexer BaseLexer
+
+#ifndef __FLEX_LEXER_H
+//#define yyFlexLexer BaseLexer
 #include <FlexLexer.h>
-#undef yyFlexLexer
- 
+//#undef yyFlexLexer
+#endif
 #undef YY_DECL
 #define YY_DECL \
 DM::Parser::token_type \
@@ -15,7 +16,7 @@ DM::Lexer::lex( \
  
 #include "parser.hpp"
 namespace DM {
-class Lexer : public BaseLexer
+class Lexer : public yyFlexLexer
 {
 public:
 	Lexer(std::istream* arg_yyin = 0, std::ostream* arg_yyout = 0);
