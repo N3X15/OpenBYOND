@@ -31,12 +31,15 @@ THE SOFTWARE.
 #include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sstream>
+#include <vector>
 
 /**
 http://stackoverflow.com/a/8098080
 **/
 std::string string_format(const std::string fmt_str, ...) {
-    int final_n, n = fmt_str.size() * 2; /* reserve 2 times as much as the length of the fmt_str */
+    int final_n; 
+	int n = fmt_str.size() * 2; /* reserve 2 times as much as the length of the fmt_str */
     std::string str;
     std::unique_ptr<char[]> formatted;
     va_list ap;
@@ -52,6 +55,17 @@ std::string string_format(const std::string fmt_str, ...) {
             break;
     }
     return std::string(formatted.get());
+}
+
+std::string string_join(const std::string join_char, std::vector<std::string> v) {
+	std::stringstream ss;
+	for(size_t i = 0; i < v.size(); ++i)
+	{
+	  if(i != 0)
+		ss << join_char;
+	  ss << v[i];
+	}
+	return ss.str();
 }
 
 /*

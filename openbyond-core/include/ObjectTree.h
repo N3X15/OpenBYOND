@@ -21,4 +21,46 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* TODO: TBD, prototype definition was pretty messy. - N3X */
+#include <string>
+#include <map>
+
+#include "Atom.h"
+
+class ObjectTree {
+public:
+	~ObjectTree();
+
+	static ObjectTree& getInstance() {
+		static ObjectTree instance;
+		return instance;
+	};
+
+	/**
+	* Build the actual tree from the collected atoms.
+	*/
+	void BuildTree();
+
+	// Used in script driver. Do NOT use after BuildTree.
+	void AddAtom(Atom *a);
+
+	/**
+	* Get an atom, given its path.
+	* @param path Path of the atom.
+	* @returns Atom desired, or NULL if not found.
+	*/
+	Atom *GetAtom(std::string path);
+
+	typedef std::map<std::string, Atom> AtomMap;
+
+	// All atoms, associated with their path.
+	AtomMap atoms;
+
+	// Root of the tree
+	Atom *tree;
+
+private:
+	ObjectTree():
+	   atoms()
+	{
+	};
+};

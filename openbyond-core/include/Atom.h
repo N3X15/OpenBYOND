@@ -50,7 +50,7 @@ public:
     std::vector<std::string> mapSpecified;
         
     // Child atoms and procs.
-    std::vector<Atom> children;
+    std::map<std::string,Atom *> children;
         
     // The parent of this atom.
     Atom *parent;
@@ -68,14 +68,33 @@ public:
     std::string old_id;
         
     // Used internally.
-	std::string ob_forced_string;
-        
-    // Used internally.
 	bool ob_inherited;
 
-	Atom(std::string path, std::string filename = "", unsigned int line = 0);
-
+	Atom(std::string path="", std::string filename = "", unsigned int line = 0);
 	~Atom(void);
+
+	// Used internally.
+	std::vector<std::string> splitPath();
+
+	bool hasProperty(std::string key) {
+		return this->properties.count(key) == 1;
+	}
+
+	std::string getProperty(std::string key, std::string default_value="") {
+		if(!this->hasProperty(key)) return default_value;
+		StringValue* val = (StringValue *)&this->properties[key];
+		return val->value;
+	};
+	int getProperty(std::string key, int default_value) {
+		if(!this->hasProperty(key)) return default_value;
+		IntegerValue* val = (IntegerValue *)&this->properties[key];
+		return val->value;
+	};
+	float getProperty(std::string key, float default_value) {
+		if(!this->hasProperty(key)) return default_value;
+		FloatValue* val = (FloatValue *)&this->properties[key];
+		return val->value;
+	};
 };
 
 #endif

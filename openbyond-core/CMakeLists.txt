@@ -44,22 +44,8 @@ if (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NO
 			../lib/
   )
 endif (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NOTFOUND")
-if (NOT ${FL_LIBRARY} OR ${FL_LIBRARY} STREQUAL "FL_LIBRARY-NOTFOUND")
-	# Last resort: Check lib/FlexLexer.h
-	find_library(FL_LIBRARY 
-		NAMES
-			fl
-		DOC
-			"Path to the fl library"
-		PATHS
-			/lib
-			/usr/local/lib
-			../lib/
-			C:\\cygwin64\\lib
-		)
-endif (NOT ${FL_LIBRARY} OR ${FL_LIBRARY} STREQUAL "FL_LIBRARY-NOTFOUND")
 
-message("Writing config.h to ${CMAKE_CURRENT_BINARY_DIR}")
+message("[OpenBYOND Core] Writing config.h to ${CMAKE_CURRENT_BINARY_DIR}")
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 # Add the include folder to the include path
@@ -75,13 +61,17 @@ include_directories(
 ##################
 set(BASICS_SOURCE
 	${CMAKE_CURRENT_SOURCE_DIR}/src/string_utils.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/vector_utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Atom.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Value.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/ObjectTree.cpp
 	)
 set(BASICS_INCLUDE
 	${CMAKE_CURRENT_SOURCE_DIR}/include/string_utils.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/vector_utils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Atom.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Value.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/ObjectTree.h
 	)
 
 SOURCE_GROUP("src\\" FILES ${BASICS_INCLUDE})
@@ -93,11 +83,9 @@ SOURCE_GROUP("src\\" FILES ${BASICS_SOURCE})
 set(DMSCRIPT_SOURCE
 	${FLEX_DMScanner_OUTPUTS}
 	${BISON_DMParser_OUTPUTS}
-	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/ObjectTree.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/Driver.cpp
 	)
 set(DMSCRIPT_INCLUDE
-	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/ObjectTree.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/DMLexer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/Driver.h
 	)

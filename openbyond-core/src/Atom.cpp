@@ -37,3 +37,22 @@ Atom::Atom(std::string path, std::string filename, unsigned int line):
 Atom::~Atom(void)
 {
 }
+
+std::vector<std::string> Atom::splitPath(){
+	std::vector<std::string> chunks;
+	std::vector<std::string>::size_type i;
+	std::string buffer="";
+	for(i=0;i<this->path.size();i++){
+		char c = path[i];
+		switch(c){
+		case '/':
+			chunks.push_back(buffer);
+			buffer="";
+			break;
+		default:
+			buffer += c;
+			break;
+		}
+	}
+	return chunks;
+}

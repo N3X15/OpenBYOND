@@ -25,7 +25,9 @@ THE SOFTWARE.
 #define HAVE_STRING_UTILS_H
 #include "config.h"
 #include <string>
+#include <vector>
 std::string string_format(const std::string fmt_str, ...);
+std::string string_join(const std::string join_char, std::vector<std::string> tojoin);
 
 /* Include vasprintf() if not on your OS. */
 #ifndef HAVE_VASPRINTF
