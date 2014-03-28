@@ -70,8 +70,10 @@ template <typename T>
 class Value : public BaseValue
 {
 public:
-	Value(std::string filename = "", unsigned int line=0, std::string typepath="/");
-	~Value();
+	Value(std::string filename = "", unsigned int line=0, std::string typepath="/"):
+		BaseValue(filename,line,typepath)
+	{};
+	//~Value();
 
 	T value;
 };
@@ -91,7 +93,7 @@ class StringValue: public Value<std::string>
 {
 public:
 	StringValue(std::string data, std::string filename = "", unsigned int line=0, std::string typepath="/");
-	~StringValue(void);
+	//~StringValue(void);
 
 	std::string ToString();
 };
@@ -101,7 +103,7 @@ class FileRefValue: public StringValue
 {
 public:
 	FileRefValue(std::string filepath, std::string filename = "", unsigned int line=0, std::string typepath="/");
-	~FileRefValue(void);
+	//~FileRefValue(void);
 
 	std::string ToString();
 };

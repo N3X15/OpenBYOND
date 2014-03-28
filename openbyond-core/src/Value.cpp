@@ -42,6 +42,11 @@ std::string BaseValue::ToString()
 	return NULL;
 }
 
+BaseValue* BaseValue::copy()
+{
+	return NULL;
+}
+
 std::string IntegerValue::ToString()
 { 
 	return string_format("%d",(int)this->value); 

@@ -64,7 +64,7 @@ int linenum = 1;
 %x STRING_STATE
 %x MULTISTRING
 
-%option yyclass="Lexer"
+%option yyclass="BaseLexer"
 %option noyywrap
 %option c++
 %option yylineno
@@ -185,6 +185,52 @@ int linenum = 1;
 
 %%
 
+namespace DM {
+Lexer::Lexer(std::istream* in, std::ostream* out)
+    : BaseLexer(in, out)
+{
+}
+
+Lexer::~Lexer()
+{
+}
+
+int Lexer::yylex()
+{
+	return 0;
+}
+/*
+void Lexer::set_debug(bool b)
+{
+    yy_flex_debug = b;
+}
+*/
+}
+
+/* This implementation of ExampleFlexLexer::yylex() is required to fill the
+ * vtable of the class ExampleFlexLexer. We define the scanner's main yylex
+ * function via YY_DECL to reside in the Scanner class instead. */
+
+#ifdef yylex
+#undef yylex
+#endif
+
+int BaseLexer::yylex()
+{
+    std::cerr << "in Lexer::yylex() !" << std::endl;
+    return 0;
+}
+
+/* When the scanner receives an end-of-file indication from YY_INPUT, it then
+ * checks the yywrap() function. If yywrap() returns false (zero), then it is
+ * assumed that the function has gone ahead and set up `yyin' to point to
+ * another input file, and scanning continues. If it returns true (non-zero),
+ * then the scanner terminates, returning 0 to its caller. */
+
+int BaseLexer::yywrap()
+{
+    return 1;
+}
 
 int yyerror (const char *s)
 {

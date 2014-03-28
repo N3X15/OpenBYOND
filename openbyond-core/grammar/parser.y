@@ -28,7 +28,7 @@ THE SOFTWARE.
 %require "2.3"
 %defines
 %define "parser_class_name" "Parser"
-%define "namespace" "DM"
+%define "namespace"         "DM"
 
 %token AS 
 %token DECREMENT 
@@ -232,11 +232,3 @@ expression
 	| const_expression
 	;
 %%
-
-#include <stdio.h>
-/*
-int main() {
-	printf("OpenBYOND DM Test Parser\n");
-	yyparse();
-}
-*/

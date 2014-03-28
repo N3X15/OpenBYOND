@@ -32,6 +32,9 @@ BISON_TARGET(DMParser ${CMAKE_CURRENT_SOURCE_DIR}/grammar/parser.y ${CMAKE_CURRE
 FLEX_TARGET(DMScanner ${CMAKE_CURRENT_SOURCE_DIR}/grammar/tokens.l ${CMAKE_CURRENT_BINARY_DIR}/grammar/tokens.cpp)
 ADD_FLEX_BISON_DEPENDENCY(DMScanner DMParser)
 
+################################################
+## FIND SHIT THAT FINDFLEX IS TOO LAZY TO FIND
+################################################
 if (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NOTFOUND")
 	# Last resort: Check lib/FlexLexer.h
 	find_path(FLEX_INCLUDE_DIR
@@ -41,6 +44,20 @@ if (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NO
 			../lib/
   )
 endif (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NOTFOUND")
+if (NOT ${FL_LIBRARY} OR ${FL_LIBRARY} STREQUAL "FL_LIBRARY-NOTFOUND")
+	# Last resort: Check lib/FlexLexer.h
+	find_library(FL_LIBRARY 
+		NAMES
+			fl
+		DOC
+			"Path to the fl library"
+		PATHS
+			/lib
+			/usr/local/lib
+			../lib/
+			C:\\cygwin64\\lib
+		)
+endif (NOT ${FL_LIBRARY} OR ${FL_LIBRARY} STREQUAL "FL_LIBRARY-NOTFOUND")
 
 message("Writing config.h to ${CMAKE_CURRENT_BINARY_DIR}")
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
@@ -88,7 +105,7 @@ set(DMSCRIPT_INCLUDE
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_INCLUDE})
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_SOURCE})
 
-set(${MODULE_NAME}_LINK_LIBS )
+set(${MODULE_NAME}_LINK_LIBS ${FLEX_LIBRARIES})
 
 # Compile the library
 add_executable(${TARGET_NAME} 

@@ -20,7 +20,7 @@ bool Driver::parse_stream(std::istream& in, const std::string& sname)
     streamname = sname;
 
     Lexer scanner(&in);
-    scanner.set_debug(trace_scanning);
+    //scanner.set_debug(trace_scanning);
     this->lexer = &scanner;
 
     Parser parser(*this);
