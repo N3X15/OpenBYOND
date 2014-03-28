@@ -18,10 +18,6 @@ set(TARGET_NAME "openbyond-core")
 project(${MODULE_NAME})
 
 ## Configurations
-# Set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-# set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 ## Configure the build system
 find_package(BISON)
@@ -93,14 +89,18 @@ set(DMSCRIPT_INCLUDE
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_INCLUDE})
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_SOURCE})
 
+set(OPENBYOND_CORE_INCLUDE CACHE STRING
+	${BASICS_INCLUDE}
+	${DMSCRIPT_INCLUDE}
+	)
+
 set(${MODULE_NAME}_LINK_LIBS 
 	#${FLEX_LIBRARIES}
 	)
 
 # Compile the library
-add_executable(${TARGET_NAME} 
+add_library(${TARGET_NAME} SHARED
 	${BASICS_INCLUDE} ${BASICS_SOURCE}
 	${DMSCRIPT_INCLUDE} ${DMSCRIPT_SOURCE}
-	${CMAKE_CURRENT_SOURCE_DIR}/src/tester.cpp
 )
-target_link_libraries(${MODULE_NAME} ${${MODULE_NAME}_LINK_LIBS})
+target_link_libraries(${TARGET_NAME} ${${MODULE_NAME}_LINK_LIBS})

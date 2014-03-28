@@ -17,6 +17,8 @@ set(VERSION_PATCH 1)
 
 # Extend the find_package search path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH    ${CMAKE_SOURCE_DIR}/bin)
 
 # Find Allegro
 find_package(allegro 5.0 REQUIRED COMPONENTS
@@ -35,29 +37,9 @@ endif()
 
 #
 # Every module has a CMakeLists.txt in it's root. 
-set (MODULES 
-	${CMAKE_SOURCE_DIR}/openbyond-core
-	${CMAKE_SOURCE_DIR}/openbyond-tools
+add_subdirectory (${CMAKE_SOURCE_DIR}/openbyond-core)
+include_directories(${CMAKE_SOURCE_DIR}/openbyond-core/include)
+add_subdirectory (${CMAKE_SOURCE_DIR}/openbyond-tools)
 #	${CMAKE_SOURCE_DIR}/openbyond-server
 #	${CMAKE_SOURCE_DIR}/openbyond-client
 #	${CMAKE_SOURCE_DIR}/openbyond-ide
-)
-
-# 
-# Each module has an include directory where all the headers go to.
-# To make it easier to find header files, I decided to make all the headers 
-# available to all modules globally.
-# You can achieve this using include_directories in the root CMakeLists.txt
-# before loading the modules.
-#foreach ( MODULE ${MODULES} )
-#  include_directories ( "${MODULE}/include/" )
-#endforeach ()
-
-#
-# After adding the include paths, the only remaining thing is to 
-# include each CMakeLists.txt for each module.
-# add_subdirectory searches for a CMakeLists.txt file in the given
-# directory, so that's what we use to include each module's build script.
-foreach ( MODULE ${MODULES} )
-  add_subdirectory ( ${MODULE} )
-endforeach ()
