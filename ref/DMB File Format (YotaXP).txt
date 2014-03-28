@@ -1,0 +1,818 @@
+DMB File Format
+
+Values are Little Endian
+IDs of (FF FF) are NULL
+
+BEGIN FILE FORMAT
+
+38 or 42 Bytes: Header (This document covers min-compatibility 468.)
+	"world bin v###\nmin compatibility v### ###\n" (Newer)
+	-or-
+	"world bin v###\nmin compatibility v###\n" (Older)
+
+4 Bytes: Bit Flags
+	0: ? (0)
+	1: Loop Checks (0=On)
+	2-3: ? (00)
+	4: Show Banner (0=On)
+	5: Sleep Offline (1=On)
+	6: Icon Mode (0=On)
+	7: Macro Mode (1=On)
+	8: ? (0)
+	9: Show Verb Panel (0=On)
+	10: ? (1)
+	11-12: Preload Resource
+		TODO: Determine values.  Below is documentation from the DM reference.
+		0 do not preload any resources 
+		1 preload compiled-in resources only 
+		2 preload all resources including those uploaded by players 
+		URL preload resources from specified file 
+	13: World Visibility (0=On)
+	14: ? (0, Possibly part of Server Visibility?)
+	15: Authenticate Server (0=On)
+	16: ? (0)
+	17: Debug Mode (1=On)
+	18-19: ? (00)
+	20: Show Map (0=On)
+	21-23: ? (000)
+	24-27: ? (0000)
+	28: Show Popup Menus (0=On)
+	29-31: ? (000)
+
+2 Bytes: Map X Size
+2 Bytes: Map Y Size
+2 Bytes: Map Z Size
+For each tile on the map:
+	TODO: Determine order. (Probably X then Y then Z.)
+	2 Byte: Turf Prototype ID
+	2 Byte: Area Prototype ID
+	2 Byte: ? (FF FF)
+	1 Byte: Placement Count (Like RLE)
+
+4 Bytes: ? (B3 0B 00 00)
+2 Bytes: Prototype Count (Subtract 1)
+For each prototype:
+	2 Bytes: Type Path String ID
+	2 Bytes: Parent Prototype ID
+	2 Bytes: Name String ID
+	2 Bytes: Desc String ID
+	2 Bytes: Icon Resource ID
+	2 Bytes: Icon State String ID
+	1 Byte: Direction
+		0: North
+		1: South
+		2: East
+		3: West
+		4: Up
+		5: Down
+		6-7: ?
+	1 Byte: DM Interface (If < 0x0F)
+	If previous byte is >= 0x0F then
+		2 Bytes: DM Interface
+		2 Bytes: ? (00 00)
+	DM Interface bit flags:
+		0: _DM_datum (Everything seems to use this.)
+		1: _DM_atom
+		2: _DM_movable
+		3-4: ?
+		5: _DM_sound
+		6: Image?
+		7: ?
+		8: _DM_Icon
+		9: _DM_RscFile (Icon and Sound use this.)
+		10-15: ?
+	2 Bytes: Text String ID (Text Mode)
+	2 Bytes: Suffix String ID
+	4 Bytes: Bit Flags
+		0: Opacity (1=On)
+		1: Density (1=On)
+		2: Visibility (1=On)
+		3-5: Luminosity (TODO: Get details on this.)
+		6-7: Gender
+			Bits 6 and 7 respectively:
+			0 0: Neuter (TODO: Verify)
+			0 1: Female
+			1 0: Male
+			1 1: Plural (TODO: Verify)
+		8: Mouse Drop Zone (1=On)
+		9: ?
+		10: Part of Animate Movement (See below.)
+		11: ?
+		12-13: Mouse Opacity
+			Bits 12 and 13 respectively:
+			0 0: 0 (Transparent)
+			0 1: ?
+			1 0: 2 (Fully Opaque)
+			1 1: 1 (Normal)
+		14-15: Part of Animate Movement (See below.)
+		16-31: ?
+		Animate Movement bit flags:
+			Bits 10, 14, and 15 respectively:
+			0 0 0: FORWARD_STEPS
+			0 0 1: SYNC_STEPS
+			0 1 0: SLIDE_STEPS
+			1 1 1: NO_STEPS
+			Else: ?
+	2 Bytes: Verb List Data ID
+	2 Bytes: Procecure List Data ID
+	2 Bytes: New Object Initialization Info
+	2 Bytes: ? (FF FF)
+	2 Bytes: Variable List Data ID
+	4 Bytes: Layer
+	2 Bytes: Built-In Variable List Data ID
+
+2 Bytes: Extra Mob Info Count
+For each ex. info:
+	2 Bytes: Mob Prototype ID
+	2 Bytes: ? (FF FF)
+	1 Bytes: Sight Flags
+	If previous byte is >= 0x80 then
+		2 Bytes: Sight Flags
+		1 Byte: See Infrared
+		1 Byte: ?
+		1 Byte: See in Dark (See Turfs?)
+		1 Byte: See Invisible
+	Sight bit flags:
+		0: Blind
+		1: See Invisible
+		2: See Mobs
+		3: See Objs
+		4: See Turfs
+		5: See Self
+		6: See Infrared
+
+2 Bytes: String Count
+For each string:
+	2 Bytes: Length (XOR this value with its offset within the file.)
+	1*Length Bytes: Characters (XOR each individual char with (<Char index within string> * 9 + <Offset of first char within file>) & 0xFF.)
+	String macros:
+		TODO: Do more research on this.
+		FF01 = [] Macro
+		FF02 = [] Macro (Applies to first one)
+		FF05 = \th Macro
+		FF06 = \a Macro
+		FF07 = \A Macro
+		FF08 = \the Macro
+		FF09 = \The Macro
+		FF0A = \he Macro
+		FF0B = \He Macro
+		FF0C = \his Macro
+		FF0D = \His Macro
+		FF0E = \hers Macro
+		FF10 = \him Macro
+		FF11 = \himself Macro
+		FF12 = \... Macro
+		FF14 = \s Macro
+		FF15 = \proper Macro
+		FF16 = \improper Macro
+		FF17 = \bold Macro
+		FF18 = \italic Macro
+		FF19 = \underline Macro
+		FF1A = \overstrike Macro
+		FF1C = \color Macro
+		FF1D = \font Macro
+		FF1F = \red Macro
+		FF20 = \green Macro
+		FF21 = \blue Macro
+		FF22 = \black Macro
+		FF23 = \white Macro
+		FF24 = \yellow Macro
+		FF25 = \cyan Macro
+		FF26 = \magenta Macro
+		FF27 = \beep Macro
+		FF28 = \link Macro
+		FF2A = \ref[] Macro
+		FF2B = \icon Macro
+		FF2C = \roman Macro
+		FF2D = \Roman Macro
+
+2 Bytes: String table hash.
+2 Bytes: ?? (Possibly having to do with RSC encryption?)
+
+2 Bytes: Data Block Count (This section contains proc code and other data.)
+For each data block:
+	2 Bytes: Count
+	2*Count Bytes: Data (Consecutive 16-bit uints.)
+	Data block detail: (Repeat until end of data block.)
+		Built-In Variable lists:
+			2 Bytes: Built-In Var ID (TODO: Find all vars.)
+				A9: screen_loc
+			2 Bytes: Data Type
+				0006: String
+				002A: Float
+			? Bytes: Data
+		Variable lists:
+			2 Bytes: Variable ID
+			2 Bytes: ? (00 00)
+		Proc/Verb lists:
+			2 Bytes: Procedure ID
+		Parameter lists:
+			2 Bytes: Arg Type Flags
+				None: command_text
+				0: mob
+				1: obj
+				2: text
+				3: num
+				4: file
+				5: turf
+				6: key
+				7: null
+				8: area
+				9: icon
+				10: sound
+				11: message
+				12: anything
+				13-14: ?
+				15: password
+				
+
+2 Bytes: Procedure Count
+For each procecure:
+	2 Bytes: Path String ID
+	2 Bytes: Name String ID
+	2 Bytes: Description String ID
+	2 Bytes: Category String ID
+	1 Byte: Range (set src in view(n))
+	1 Byte: Access (set src...)
+		0x01: in view(range)
+		0x02: in oview(range)
+		0x03: in usr.loc
+		0x08: in usr
+		0x10: in world
+		0x20: = usr
+	1 Byte: Bit Flags
+		0: Hidden (1=On)
+		1: set src in X (0), set src = X (1)
+		2-5: ?
+		6: Popup (0=On)
+		7: Use Extended Flags (See below.)
+	If bit 7 of previous byte is set:
+		4 Bytes: Extended Bit Flags
+			0-2: ?
+			3: Invisible (1=On)
+			4: Visible (1=On, Bit 3 is also set.)
+			5-7: ?
+			8: Background (1=On)
+			9-31: ?
+		1 Byte: Invisibility (TODO: Does this work like object invisibility?)
+	2 Bytes: Procedure Code Data ID
+	2 Bytes: Variable List Data ID
+	2 Bytes: Parameter List Data ID
+
+2 Bytes: Variable Count
+For each variable:
+	1 Byte: Type (TODO: Try for path types, lists, savefiles, files, rscfiles.)
+		0x00: Null
+		0x06: String
+		0x2A: Float
+		0x3E: New Datum
+	If Null:
+		4 Bytes: Padding (00 00 00 00)
+	If String:
+		2 Bytes: String ID
+		2 Bytes: Padding (00 00)
+	If Float:
+		4 Bytes: 32-bit (Single-precision) floating point data
+	If New Datum:
+		???
+	2 Bytes: Name String ID
+
+2 Bytes: Argument 'In List' Count
+For each 'in list' info:
+	2 Bytes: Proc Info ID
+
+2 Bytes: Modified Prototype Count
+For each modified prototype item:
+	1 Byte: Type (TODO: Determine what each value means.)
+	If Type is 0x08:
+		2 Bytes: Mob ID (As seen in Extra Mob Info list.)
+	Else:
+		2 Bytes: Prototype ID
+	2 Bytes: ?
+	2 Bytes: Initialization Procedure ID (For modified types.)
+
+4 Bytes: Map Storage Count
+For each map storage item:
+	Normal:
+		2 Bytes: Placement Offset (Starting in lower-left, scanning horizontally.)
+		2 Bytes: Modified Prototype ID
+	Extended offset: When these bytes are used, the next map storage item has 65535 added to its placement offset.
+		4 Bytes: FF FF FF FF
+
+2 Bytes: Default Mob ExMobInfo ID
+2 Bytes: Default Turf Prototype ID
+2 Bytes: Default Area Prototype ID
+2 Bytes: Overridden World Proc List
+2 Bytes: Global New Object Init Info List ID
+2 Bytes: World Domain String ID
+2 Bytes: World Name String ID
+2 Bytes: Tick Lag
+2 Bytes: ?
+2 Bytes: Client Prototype ID
+2 Bytes: Image Prototype ID
+1 Byte: Lazy Eye
+1 Byte: Client View Direction
+1 Byte: Control Freak
+2 Bytes: ?
+2 Bytes: Client Script (TODO: What type of data does this refer to?)
+2 Bytes: ?
+1 Byte: View Width
+1 Byte: View Height
+2 Bytes: Hub Password String ID (MD5 hash)
+2 Bytes: World Status String ID
+4 Bytes: ?
+4 Bytes: World Version
+2 Bytes: Cache Lifespan
+2 Bytes: Default Command Text String ID
+2 Bytes: Default Command Prompt String ID
+2 Bytes: Hub Path String ID
+4 Bytes: ?
+2 Bytes: Icon Width
+2 Bytes: Icon Height
+2 Bytes: Map Format (TODO: List values.)
+
+2 Bytes: Resource Count
+For each resource:
+	4 Bytes: CRC32 Hash
+	1 Byte: Resource Type (TODO: Determine types.)
+		0x00: Text (IE script and map files.)
+		0x01: Sound
+		0x02: Image
+
+END FILE FORMAT
+
+BEGIN OPCODE
+
+Notes:
+	Regarding op codes below:
+		Format is (0000 [Param] [Param]) where 0000 is the op code,
+		and the Params are values it expects to follow.
+	Regarding "Expects" blocks below:
+		Many operations pop data from the internal stack in a certain order.
+		The "Expects" block lists what the op expects, in the order that
+		the values should be pushed onto the stack.
+	Regarding [{Var}] params below:
+		When an operation requires a reference to a variable cell,
+		it uses following op codes to provide them.  These are only used
+		as parameters to operations, and no not push data to the stack.
+		Example:
+			0033 FFDC FFDC FFCE 0038 0047
+			 
+			0033: An operation that pushes data from a refrence onto the stack.
+			FFDC: Takes an object reference and a variable ID to return an object reference.
+			FFCE: The source object. (src)
+			The whole thing is equivelant to: src.a.x
+		
+		FFCD ???: usr (Read/Write)
+		FFCE: src (Read Only)
+		FFD0 ???: . (Read/Write)
+		FFD9 ???: Argument Var (Read/Write)
+		FFDA [ID]: Local Var (Read/Write)
+		FFDB ???: Global Var (Read/Write)
+		FFDC [Obj] [Var]: Object Var (Read/Write, Var is a String ID or FFDC)
+			If Var is FFDC, it will be followed by another two String IDs, or a String ID and another FFDC:
+				FFDC [Var1] [Var2]
+		FFDD ???: Source Proc? (???)
+		FFDF [Proc]: Instance Proc
+		FFE5: world (Read Only)
+		FFE6: null (Read Only)
+		FFE7 ???: Initial Var (Read Only)
+		FFE8 ???: Saved Var (Read Only)
+
+0000: Return (Uses '.')
+0001 [Args]: New Datum (Pushes result to stack.)
+	Expects:
+		1 Path: Type of datum to be created.
+		[Args] Values: Parameters to be passed to constructor.
+0002 [String] [Args]: String with Substitution Support
+	Expects:
+		[Args] Values: Data to be put into string.
+	Pushes resulting string.
+0003: Output (<<)
+	Expects:
+		1 Obj: Object to be outputted to.
+		1 Value: Data to be output.
+0004 [String] [Args]: Output (<<) with Substitution Support
+	Expects:
+		1 Obj: Object to be outputted to.
+		[Args] Values: Data to be put into string.
+0005 ???:
+0006 ???:
+0007 ???:
+0008 ???:
+0009 ???:
+000A ???:
+000B ???: missile(path, atom, atom)
+000C ???: Delete (del)
+000D: Is True
+	Expects:
+		1 Data: Data to check.
+	Pushes TRUE or FALSE
+000E ???: Logical Not (!)
+000F [Op]: Break (Op 0 is beginning of proc.)
+0010 ???:
+0011 [Op]: If (Op 0 is beginning of proc.)
+	Expects:
+		1 Boolean: Condition
+	Note:
+		Jumps to the given location if the condition is FALSE.
+0012: Return
+	Expects:
+		1 Data: Data to be returned.
+0013 ???: isloc(datum)
+0014 ???: ismob(datum)
+0015 ???: isobj(datum)
+0016 ???: isarea(datum)
+0017 ???: isturf(datum)
+0018 ???: alert(client, string, string, string, string, string)
+0019 ???:
+001A [Items]: list(...)
+	Expects:
+		[Items] Values: Values to be put into a list.
+	Pushes list
+001B ???: view(int, atom)
+001C ???: oview(int, atom)
+001D ???:
+001E ???:
+001F ???:
+0020 ???:
+0021: prob(float)
+	Expects:
+		1 Number: 0-100 Probability
+	Pushes TRUE or FALSE
+0022 ???: rand(_)
+0023 ???: rand(_, _)
+0024: sleep(_)
+	Expects:
+		1 Number: Ticks to wait. (0 is default.)
+0025 [Op]: spawn(_)
+	Expects:
+		1 Number: Ticks to wait. (0 is default.)
+	Notes:
+		Execution jumps to [Op] on the current "thread".
+		Another "thread" then begins at the operation immediately after the spawn op.
+0026 ???:
+0027 ???:
+0028 ???: isicon(datum)
+0029 [{Obj}] [{Proc}] [Args]: Call Object Proc w/Return
+	Expects:
+		[Args] Values: Parameters to be passed.
+	Pushes result of proc
+002A [{Obj}] [{Proc}] [Args]: Call Object Proc w/o Return
+	Expects:
+		[Args] Values: Parameters to be passed.
+	Pushes result of proc?
+002B ???:
+002C: Call Parent Proc (Reuse Args)
+002D [Args]: Call Parent Proc
+	Expects:
+		[Args] Values: Parameters to be passed.
+	Pushes result of proc
+002E: Call Current Proc (Reuse Args)
+	Pushes result of proc
+002F [Args]: Call Current Proc
+	Expects:
+		[Args] Values: Parameters to be passed.
+	Pushes result of proc
+0030 [Param Count] [Proc]: Call Global Proc
+	Pushes result of proc
+0031 ???: log(float)
+0032 ???: log(float, float)
+0033 [{Var}]: Push to Stack
+0034 [{Var}]: Assignment (=)
+	Expects:
+		1 Value: Data to be assigned.
+0035 ???:
+0036 ???: Equality?
+0037: Equivalant (==)
+	Expects:
+		1 Value: Left side of comparison.
+		1 Value: Right side of comparison.
+	Pushes TRUE or FALSE
+0038: Inequivalant (!= <>)
+	Expects:
+		1 Value: Left side of comparison.
+		1 Value: Right side of comparison.
+	Pushes TRUE or FALSE
+0039: Less Than (<)
+	Expects:
+		1 Value: Left side of comparison.
+		1 Value: Right side of comparison.
+	Pushes TRUE or FALSE
+003A: Greater Than (>)
+	Expects:
+		1 Value: Left side of comparison.
+		1 Value: Right side of comparison.
+	Pushes TRUE or FALSE
+003B: Less Than or Equal (<=)
+	Expects:
+		1 Value: Left side of comparison.
+		1 Value: Right side of comparison.
+	Pushes TRUE or FALSE
+003C: Greater Than or Equal (>=)
+	Expects:
+		1 Value: Left side of comparison.
+		1 Value: Right side of comparison.
+	Pushes TRUE or FALSE
+003D ???:
+003E: Addition (+)
+	Expects:
+		1 Value: Left side of operation.
+		1 Value: Right side of operation.
+	Pushes result
+003F: Subtraction (-)
+	Expects:
+		1 Value: Left side of operation.
+		1 Value: Right side of operation.
+	Pushes result
+0040: Multiplication (*)
+	Expects:
+		1 Value: Left side of operation.
+		1 Value: Right side of operation.
+	Pushes result
+0041: Division (/)
+	Expects:
+		1 Value: Left side of operation.
+		1 Value: Right side of operation.
+	Pushes result
+0042: Modulus (%)
+	Expects:
+		1 Value: Left side of operation.
+		1 Value: Right side of operation.
+	Pushes result
+0043 ???:
+0044 ???:
+0045 [{Var}]: Addition Shorthand (+=)
+	Expect:
+		1 Value: Right side of operation.
+0046 [{Var}]: Subtraction Shorthand (-=)
+	Expect:
+		1 Value: Right side of operation.
+0047 [{Var}]: Multiplication Shorthand (*=)
+	Expect:
+		1 Value: Right side of operation.
+0048 [{Var}]: Division Shorthand (/=)
+	Expect:
+		1 Value: Right side of operation.
+0049 [{Var}]: Modulus Shorthand (%=)
+	Expect:
+		1 Value: Right side of operation.
+004A [{Var}]: Binary AND Shorthand (&=)
+	Expect:
+		1 Value: Right side of operation.
+004B [{Var}]: Binary OR Shorthand (|=)
+	Expect:
+		1 Value: Right side of operation.
+004C [{Var}]: Binary XOR Shorthand (^=)
+	Expect:
+		1 Value: Right side of operation.
+004D ???:
+004E ???:
+004F ???:
+0050 [Data]: Push Integet Onto Stack
+	Pushes a number
+0051: Pop from Stack (I.E. Ignore)
+	Expects:
+		1 Item: Item to throw away.
+0052 ???:
+0053 ???: startup(string, int, string, ...)
+0054 ???:
+0055 ???:
+0056 ???:
+0057 ???: roll(int, int)
+0058 ???: roll(str)
+0059 ???:
+005A ???:
+005B ???:
+005C ???:
+005D ???:
+005E ???:
+005F ???:
+0060 [Type]: Push Data Onto Stack
+	0000 0000: Null
+	0005 [ID]: Resource
+	0006 [ID]: String
+	0008 [ID]: Type (Mob, ID is from mob list.)
+	0009 [ID]: Type (Movable Atom)
+	000A [ID]: Type (Atom)
+	0020 [ID]: Type (Datum)
+	0024 0000: Type (Savefile, always /savefile)
+	0026 [ID]: Type (Procedure, ID is from proc list.)
+	0028 0000: Type (List, always /list.)
+	0029 [ID]: Modified Type (Map Object ID)
+	002A [Data] [Data]: Float
+	003B 0000: Type (Client, always /client.)
+	003F 0000: Type (Image, always /image.)
+	Pushes the data.
+0061 ???:
+0062 [{Var}]: Pre-Increment
+	Pushes a number.
+0063 [{Var}]: Post-Increment
+	Pushes a number.
+0064 [{Var}]: Pre-Decrement
+	Pushes a number.
+0065 [{Var}]: Post-Decrement
+	Pushes a number.
+0066 [{Var}] Increment (++)
+0067 [{Var}] Decrement (--)
+0068: abs(float)
+	Excpects:
+		1 Number: Number to process.
+	Pushes result.
+0069 ???:
+006A ???: Exponent (**)
+006B ???: turn(int, int)
+006C ???:
+006D ???: length(datum)
+	Notes: lentext() becomes this?
+006E ???: copytext(string, int, int)
+006F ???: findtext(string, string, int, int)
+0070 ???: findText(string, string, int, int)
+0071 ???:
+0072 ???:
+0073 ???:
+0074 ???: uppertext(string)
+0075 ???: lowertext(string)
+0076 ???:
+0077 ???:
+0078 ???: switch(val)
+0079 [...]: pick()
+	Notes: (This op is not to be confused with 00D2.)
+		This is a magical one.  The following params are expected.
+		16-bit Int: Number of probability checks to make.
+		[Checks] Pairs:
+			16-bit Int: Probability of this case succeeding. (n / 65535)
+			16-bit Int: Op code to jump to if the roll succeeds.
+		16-bit Int: Op code to jump to if all the previous rolls fail.
+007A ???:
+007B ???:
+007C ???:
+007D ???: istype(datum, path)
+007E ???: Binary AND (&)
+007F ???: Binary OR (|)
+0080 ???: Binary XOR (^)
+0081 ???: Binary NOT (~)
+0082 ???: Binary Shift Left (<<)
+0083 ???: Binary Shift Right (>>)
+0084 [String]: Set File Name (Debug only)
+0085 [Line]: Set Line Number (Debug only)
+0086 ???: step(atom, int)
+0087 ???: step_to(atom, atom)
+0088 ???: step_away(atom, atom)
+0089 ???: step_towards(atom, atom)
+008A ???: step_rand(atom)
+008B ???: walk(atom, int, int)
+008C ???: walk_to(atom, atom, int, int)
+008D ???: walk_away(atom, atom, int, int)
+008E ???: walk_towards(atom, atom, int)
+008F ???: walk_rand(atom, int)
+0090 ???: get_step(atom, int)
+0091 ???:
+0092 ???:
+0093 ???:
+0094 ???:
+0095 ???:
+0096 ???:
+0097 ???:
+0098 ???: shell(string)
+0099 ???: text2file(string, file)
+009A ???: file2text(file)
+009B ???:
+009C ???:
+009D ???:
+009E ???: isnull(datum)
+009F ???: isnum(datum)
+00A0 ???: istext(datum)
+00A1 ???:
+00A2 ???:
+00A3 ???:
+00A4 ???:
+00A5 ???:
+00A6 ???:
+00A7 ???: typesof(path)
+00A8 ???:
+00A9 ???:
+00AA ???:
+00AB ???:
+00AC ???:
+00AD ???:
+00AE ???:
+00AF ???: Input (>>)
+00B0 ???:
+00B1 ???:
+00B2 ???: Logical OR (||)
+00B3 ???: Logical AND (&&)
+00B4 ???:
+00B5 ???:
+00B6 ???:
+00B7 ???:
+00B8 ???:
+00B9 ???:
+00BA ???: input(client, string, string, datum)?
+00BB ???:
+00BC ???:
+00BD ???:
+00BE ???:
+00BF ???:
+00C0 ???: time2text(int, string)
+00C1 ???:
+00C2 ???: sin(float)
+00C3 ???: cos(float)
+00C4 ???: arcsin(float)
+00C5 ???: arccos(float)
+00C6 ???:
+00C7 ???:
+00C8 ???:
+00C9 ???:
+00CA ???:
+00CB ???:
+00CC ???:
+00CD ???:
+00CE ???:
+00CF ???:
+00D0 ???: min(float, float)
+00D1 ???: max(float, float)
+00D2: pick(list)
+	Expects: (Not to be confused with 0079.)
+		1 List: List to choose an item from.
+	Pushes result.
+00D3 ???:
+00D4 ???:
+00D5 ???:
+00D6 ???:
+00D7: fcopy_rsc(rsc)
+	Excpects:
+		1 Resource: Resource to cache.
+	Pushes cached resource.
+00D8 ???:
+00D9 ???:
+00DA ???: rand_seed(int)
+00DB ???: text2ascii(string, int)
+00DC ???:
+00DD ???: icon_states(icon)
+00DE ???:
+00DF ???:
+00E0 ???:
+00E1 ???:
+00E2 ???:
+00E3 ???:
+00E4 ???: isfile(datum)
+00E5 ???: viewers(string, atom)
+00E6 ???: oviewers(string, atom)
+00E7 ???: hearers(string, atom)
+00E8 ???: ohearers(string, atom)
+00E9 ???:
+00EA ???:
+00EB ???:
+00EC ???:
+00ED ???:
+00EE ???:
+00EF ???:
+00F0 ???:
+00F1 ???:
+00F2 ???:
+00F3 ???:
+00F4 ???:
+00F5 ???: ispath(datum)
+00F6 ???: ispath(path, path)
+00F7 ???:
+00F8 [Op]: Goto (Op 0 is beginning of proc.)
+00F9 ???: Conditional Goto?
+00FA ???:
+00FB ???:
+00FC ???:
+00FD ???:
+00FE ???:
+00FF ???:
+0100 ???:
+0101 ???:
+0102 ???:
+0103 ???: eval?
+0104 ???:
+0105 ???:
+0106 ???:
+0107 ???:
+0108 ???:
+0109 ???: md5(string)
+010A ???:
+010B ???: output(string, string)
+010C ???: winset(client, string, string)
+010D ???: winget(client, string, string)
+010E ???: winclone(client, string, string)
+010F ???: winshow(client, string, int)
+0110 ???:
+0111 ???:
+0112 ???:
+0113 ???:
+0114 ???:
+0115 ???:
+0116 ???:
+0117 ???:
+0118 ???: winexists(client, string)
+0119 ???:
+011A ???:
+011B ???:
+011C ???:
+011D ???:
+011E ???:
+011F ???:
