@@ -33,7 +33,7 @@ THE SOFTWARE.
 %token AS 
 %token DECREMENT 
 %token DEDENT
-%token END
+%token END        0 "end of file"
 %token EQUAL 
 %token EXPONENT 
 %token GEQUAL 
@@ -107,7 +107,6 @@ definitions
 	| vardef definitions 
 	| atomdef definitions
 	| procdecl definitions
-	| definitions END
 	;
 
 vardef
