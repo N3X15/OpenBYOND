@@ -107,6 +107,7 @@ definitions
 	| vardef definitions 
 	| atomdef definitions
 	| procdecl definitions
+	| definitions END
 	;
 
 vardef
