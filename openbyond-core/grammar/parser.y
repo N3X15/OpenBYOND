@@ -59,7 +59,6 @@ THE SOFTWARE.
 %left '*' '/'
 %nonassoc UMINUS
 %nonassoc '(' ')'
-%nonassoc "abspath"
 
 %union {
 	char* strval;
@@ -145,6 +144,7 @@ atom_contents
 	: vardef atom_contents
 	| atomdef atom_contents
 	| procdef atom_contents
+	| /* empty */
 	;
 
 vardefs

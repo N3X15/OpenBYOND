@@ -41,9 +41,17 @@ typedef DM::Parser::token_type token_type;
 
 #define MAX_DEPTH 72
 
-#define LEX_DEBUG(x)   printf("%s",x)
+#define LEX_TRACE 1
+
+#ifdef LEX_TRACE
+#define LEX_DEBUG(x)   printf("%s", x)
 #define DEBUG_TOKEN(x) printf("%s ",x)
 #define DEBUG_EOL      printf("\n");
+#else
+#define LEX_DEBUG(x)
+#define DEBUG_TOKEN(x)
+#define DEBUG_EOL
+#endif
 
 #define DM_TAB_WIDTH 4
 
@@ -91,7 +99,7 @@ int linenum = 1;
 			BEGIN INITIAL;
 		}
 	}
-<<EOF>>                {
+<<EOF>> {
 		//printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
 		current_line_indent=0;
 		if (current_indent_level>0) {
