@@ -24,7 +24,12 @@ find_package(BISON)
 find_package(FLEX)
 
 ## Build the compiler code
-BISON_TARGET(DMParser ${CMAKE_CURRENT_SOURCE_DIR}/grammar/parser.y ${CMAKE_CURRENT_BINARY_DIR}/grammar/parser.cpp)
+BISON_TARGET(DMParser 
+	${CMAKE_CURRENT_SOURCE_DIR}/grammar/parser.y 
+	${CMAKE_CURRENT_BINARY_DIR}/grammar/parser.cpp 
+	VERBOSE ${CMAKE_CURRENT_BINARY_DIR}/grammar/parser.out
+	COMPILE_FLAGS --graph
+	)
 FLEX_TARGET(DMScanner ${CMAKE_CURRENT_SOURCE_DIR}/grammar/tokens.l ${CMAKE_CURRENT_BINARY_DIR}/grammar/tokens.cpp)
 ADD_FLEX_BISON_DEPENDENCY(DMScanner DMParser)
 

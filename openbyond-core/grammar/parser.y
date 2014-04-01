@@ -59,13 +59,13 @@ THE SOFTWARE.
 %left '*' '/'
 %nonassoc UMINUS
 %nonassoc '(' ')'
+%nonassoc "abspath"
 
 %union {
 	char* strval;
 }
 
 %type <strval> IDENTIFIER;
-%type <strval> defname atompath
 
 %{
 
@@ -79,6 +79,8 @@ THE SOFTWARE.
 
 #undef yylex
 #define yylex driver.lexer->lex
+
+#define Y_DEBUG(rule,num) printf("%s[%d] ",rule,num);
 %}
 /* keep track of the current position within the input */
 %locations
@@ -100,136 +102,116 @@ THE SOFTWARE.
 %error-verbose
 
 %%
-
-definitions
+script
 	: /* empty */
-	| definition definitions 
-	| vardef definitions 
-	| atomdef definitions
-	| procdecl definitions
+	| atomdef script                           { Y_DEBUG("script",1); }
+	| procdecl script                          { Y_DEBUG("script",2); }
+	| vardef script                            { Y_DEBUG("script",3); }
 	;
 
-vardef
-	: var_start INDENT variable_blocks DEDENT       {;}
-	| var_start '/' variable                        {;}
+path
+	: /* empty */                              { Y_DEBUG("path",0); }
+	| IDENTIFIER                               { Y_DEBUG("path",1); }
+	| '/' path                                 { Y_DEBUG("path",2); }
+	| path '/' IDENTIFIER                      { Y_DEBUG("path",3); }
 	;
 	
 procdecl
-	: atomdecl '/' PROC '/' procdef                 { /* Set child proc to use atomdecl and be declarative */ }
-	| PROC '/' procdef                              { /* Proc *whatever = $2; whatever->setDeclarative(true); return whatever */ }
-	| PROC INDENT procdefs DEDENT                   { /* Set procs created "below" to declarative. */ }
-	;
-
-procdefs
-	: procdef 
-	| procdefs procdef
-	;
-procdef
-	: defname '(' arguments ')' INDENT procbody DEDENT { /* return current->addProc($1,$3) */ }
+	: path '/' PROC '/' procdef                { Y_DEBUG("procdecl",1); }
+	| path '/' procblock                       { Y_DEBUG("procdecl",2); }
+	| procblock                                { Y_DEBUG("procdecl",3); }
 	;
 	
+procblock
+	: PROC INDENT procdefs DEDENT              { Y_DEBUG("procblock",1); }
+	;
+
 atomdef
-	: atomdecl definition_contents                  {;}
-	| atompath definition_contents                  {;}
+	: path INDENT atom_contents DEDENT         { Y_DEBUG("atomdef",1); }
 	;
 	
-atomdecl
-	: '/' atompath                                  { /*return new Atom($2);*/ }
-	;
-	
-atompath
-	: defname                                       { $$ = $1; }
-	| defname '/' atompath                          { 
-		char *o; 
-		int size = asprintf(&o, "%s/%s",$1,$3);
-		if(size<0) {
-			$$ = NULL;
-		} else {
-			$$ = o;
-		}
-	}
-	;
-defname
-	: IDENTIFIER                                    { $$ = $1;}
+atom_contents
+	: vardef atom_contents
+	| atomdef atom_contents
+	| procdef atom_contents
 	;
 
-definition
-	: defname '/' definition                        {;}
-	| defname '/' vardef                            {;}
+vardefs
+	: vardef vardefs
+	| vardef
 	;
-		
-definition_contents
-	: /* empty */
-	| INDENT definitions DEDENT
+vardef
+	: path '/' varblock
+	| varblock
+	| inline_vardef
 	;
-		
-var_start
-	: VAR                                           {;}
+
+inline_vardef_no_default
+	: VAR '/' IDENTIFIER
+	| VAR '/' path '/' IDENTIFIER
+	;
+
+inline_vardef
+	: inline_vardef
+	| inline_vardef '=' const_expression
 	;
 	
+varblock
+	: VAR INDENT vardefs DEDENT
+	;
+	
+procdef
+	: IDENTIFIER argblock INDENT expressions DEDENT
+	;
+	
+argblock
+	: '(' arguments ')'
+	;
+
 arguments
-	: variable                                      {;}
-	| variable ',' arguments                        {;}
-	|
-	;
-
-variabledefs
-	: variable_blocks
-	| variables
-	;
-
-variables
 	: /* empty */
-	| variable variables
-	;
-
-variable_blocks
-	: variable_block variable_blocks
-	;
-
-varname 
-	: IDENTIFIER                                    {;}
+	| inline_vardef ',' arguments
+	| inline_vardef
 	;
 	
-variable_block
-	: varname INDENT variable_contents DEDENT       {;}
+procdefs
+	: procdef procdefs
+	| procdef
 	;
 	
-variable
-	: atompath                                      {;}
-	| atompath '=' const_expression                 {;}
-	| var_start '/' variable                        {;}
-	;
-	
-variable_contents
-	: INDENT variables DEDENT
-	|
-	;
-
 const_expression
 	: NUMBER
-	| STRING
 	| '(' const_expression ')'
-	| const_expression '+' const_expression
-	| const_expression '-' const_expression
 	| const_expression '*' const_expression
 	| const_expression '/' const_expression
-	| '-' const_expression %prec UMINUS
-	;
-	
-procbody // And here's where it gets hairy.
-	: /* empty */
-	| expressions
-	;
-	
-expressions
-	: expression
-	| expression expressions
+	| const_expression '%' const_expression
+	| const_expression '+' const_expression
+	| const_expression '-' const_expression
 	;
 
 expression
-	: RETURN expression {;}
-	| const_expression
+	: assignment
+	| inline_vardef
+	| return
+	;
+	
+expressions
+	: /* empty */
+	| expression expressions
+	| expression
+	;
+	
+assignable_expression
+	: const_expression
+	| IDENTIFIER 
+	/* | string_expression */
+	;
+	
+assignment
+	: IDENTIFIER '=' assignable_expression
+	;
+return
+	: RETURN const_expression
 	;
 %%
 void DM::Parser::error(const Parser::location_type& l, const std::string& m)
