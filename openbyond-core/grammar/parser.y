@@ -144,6 +144,8 @@ atom_contents
 	: vardef atom_contents
 	| atomdef atom_contents
 	| procdef atom_contents
+	| procblock atom_contents
+	| varblock atom_contents
 	| /* empty */
 	;
 
@@ -159,7 +161,7 @@ vardef
 
 inline_vardef_no_default
 	: varslash IDENTIFIER
-	| varslash path IDENTIFIER
+	| varslash pathslash IDENTIFIER
 	;
 
 varslash
