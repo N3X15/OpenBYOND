@@ -80,7 +80,7 @@ THE SOFTWARE.
 #undef yylex
 #define yylex driver.lexer->lex
 
-#define Y_DEBUG(rule,num) printf("%s[%d] ",rule,num);
+#define Y_DEBUG(rule,num) printf(" -> %s[%d] ",rule,num);
 %}
 /* keep track of the current position within the input */
 %locations
@@ -89,9 +89,6 @@ THE SOFTWARE.
     // initialize the initial location object
     @$.begin.filename = @$.end.filename = &driver.streamname;
 };
-
-
-
 
 /* The driver is passed by reference to the parser and to the scanner. This
  * provides a simple but effective pure interface, not relying on global
@@ -103,24 +100,38 @@ THE SOFTWARE.
 
 %%
 script
-	: /* empty */
-	| atomdef script                           { Y_DEBUG("script",1); }
+	: atomdef script                           { Y_DEBUG("script",1); }
 	| procdecl script                          { Y_DEBUG("script",2); }
 	| vardef script                            { Y_DEBUG("script",3); }
+	| /* empty */
 	;
 
 path
-	: /* empty */                              { Y_DEBUG("path",0); }
-	| IDENTIFIER                               { Y_DEBUG("path",1); }
-	| '/' path                                 { Y_DEBUG("path",2); }
-	| path '/' IDENTIFIER                      { Y_DEBUG("path",3); }
+	: abspath                                  { Y_DEBUG("path",1); }
+	| relpath                                  { Y_DEBUG("path",2); }
+	;
+	
+pathslash
+	: path '/'                                 { Y_DEBUG("pathslash", 1); }
+	;
+
+abspath
+	: '/' relpath                              { Y_DEBUG("abspath",1); }
+	;
+
+relpath
+	: IDENTIFIER                               { Y_DEBUG("relpath",1); }
+	| relpath '/' IDENTIFIER                   { Y_DEBUG("relpath",2); }
 	;
 	
 procdecl
-	: path '/' PROC '/' procdef                { Y_DEBUG("procdecl",1); }
-	| path '/' procblock                       { Y_DEBUG("procdecl",2); }
+	: path procslash procdef                   { Y_DEBUG("procdecl",1); }
+	| path procblock                           { Y_DEBUG("procdecl",2); }
 	| procblock                                { Y_DEBUG("procdecl",3); }
 	;
+	
+procslash 
+	: PROC '/' ;
 	
 procblock
 	: PROC INDENT procdefs DEDENT              { Y_DEBUG("procblock",1); }
@@ -141,14 +152,18 @@ vardefs
 	| vardef
 	;
 vardef
-	: path '/' varblock
+	: path varblock
 	| varblock
 	| inline_vardef
 	;
 
 inline_vardef_no_default
-	: VAR '/' IDENTIFIER
-	| VAR '/' path '/' IDENTIFIER
+	: varslash IDENTIFIER
+	| varslash path IDENTIFIER
+	;
+
+varslash
+	: VAR '/'
 	;
 
 inline_vardef
