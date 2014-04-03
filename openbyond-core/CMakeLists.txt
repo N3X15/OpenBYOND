@@ -89,6 +89,7 @@ set(DMSCRIPT_SOURCE
 set(DMSCRIPT_INCLUDE
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/DMLexer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/Driver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/Nodes.h
 	)
 
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_INCLUDE})

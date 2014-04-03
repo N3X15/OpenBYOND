@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 /**
 http://stackoverflow.com/a/8098080
@@ -165,3 +166,43 @@ int asprintf(char **str, const char *fmt, ...)
         return ret;
 }
 #endif
+
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
+}
+
+struct appender
+{
+  appender(char d, std::string& sd, int ic) : delim(d), dest(sd), count(ic)
+  {
+    dest.reserve(2048);
+  }
+
+  void operator()(std::string const& copy)
+  {
+    dest.append(copy);
+    if (--count)
+      dest.append(1, delim);
+  }
+
+  char delim;
+  std::string& dest;
+  int count;
+};
+
+void implode(const std::vector<std::string>& elems, char delim, std::string& s)
+{
+  std::for_each(elems.begin(), elems.end(), appender(delim, s, elems.size()));
+}
