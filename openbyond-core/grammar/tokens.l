@@ -105,7 +105,9 @@ int linenum = 1;
 		}
 	}
 <<EOF>> {
-		printf("\n--- [EOF] INDENT_PROCESSING - CLI: %3d, CIL: %d",current_line_indent,current_indent_level);
+#ifdef LEX_TRACE
+		printf("\n--- [EOF] [INDENT_PROCESSING - CLI: %3d, CIL: %d] ",current_line_indent,current_indent_level);
+#endif
 		current_line_indent=0;
 		if (current_indent_level>0) {
 			unput(*yytext);
