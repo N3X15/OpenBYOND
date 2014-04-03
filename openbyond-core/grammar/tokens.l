@@ -41,18 +41,9 @@ typedef DM::Parser::token_type token_type;
 
 #define MAX_DEPTH 72
 
-// Enable this to relentlessly spam your console with lexer tokens.
-//#define LEX_TRACE 1
-
-#ifdef LEX_TRACE
-#define LEX_DEBUG(x)   printf("%s", x)
-#define DEBUG_TOKEN(x) printf("%s ",x)
-#define DEBUG_EOL      printf("\n");
-#else
-#define LEX_DEBUG(x)
-#define DEBUG_TOKEN(x)
-#define DEBUG_EOL
-#endif
+#define LEX_DEBUG(x)   if(trace) {printf("%s", x);}
+#define DEBUG_TOKEN(x) if(trace) {printf("%s ",x);}
+#define DEBUG_EOL      if(trace) {printf("\n");}
 
 #define DM_TAB_WIDTH 4
 
@@ -65,6 +56,9 @@ int indent_level = 0;          /* indentation level passed to the parser */
 
 /* Current position */
 int linenum = 1;
+
+/* Debugging? */
+bool trace = false;
 /* %option yyclass="BaseLexer" */
 %}
 
@@ -84,7 +78,7 @@ int linenum = 1;
 <INDENT_PROCESSING>"\n" { current_line_indent = 0; DEBUG_EOL; linenum++; /*ignoring blank line */ }
 <INDENT_PROCESSING>.    {
 #ifdef LEX_TRACE
-		printf("\n[INDENT_PROCESSING - CLI: %3d, CIL: %d] ",current_line_indent,current_indent_level);
+		printf("\n[INDENT_PROCESSING - CLI: %3d, CIL: %d]",current_line_indent,current_indent_level);
 		for(int i = 0;i<current_indent_level;i++)
 			printf("  "); // 2 spaces
 #endif
@@ -107,13 +101,15 @@ int linenum = 1;
 	}
 <<EOF>> {
 #ifdef LEX_TRACE
-		printf("\n--- [EOF] [INDENT_PROCESSING - CLI: %3d, CIL: %d] ",current_line_indent,current_indent_level);
+		printf("\n[INDENT_PROCESSING - CLI: %3d, CIL: %d]",current_line_indent,current_indent_level);
+		for(int i = 0;i<current_indent_level;i++)
+			printf("  "); // 2 spaces
 #endif
 		current_line_indent=0;
 		if (current_indent_level>0) {
 			unput(*yytext);
 			current_indent_level--;
-			DEBUG_TOKEN("DEDENT");
+			DEBUG_TOKEN("DEDENT(EOF)");
 			//DEBUG_EOL;
 			return token::DEDENT;
 		} else {
@@ -215,12 +211,10 @@ int Lexer::yylex()
 {
 	return 0;
 }
-/*
-void Lexer::set_debug(bool b)
+void Lexer::set_debug_level(bool b)
 {
-    yy_flex_debug = b;
+    trace = b;
 }
-*/
 }
 
 /* This implementation of ExampleFlexLexer::yylex() is required to fill the

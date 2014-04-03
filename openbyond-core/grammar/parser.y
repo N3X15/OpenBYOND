@@ -79,11 +79,8 @@ THE SOFTWARE.
 #undef yylex
 #define yylex driver.lexer->lex
 
-#ifdef PARSER_DEBUG
-#define Y_DEBUG(rule,num) printf("%s[%d] ",rule,num)
-#else
-#define Y_DEBUG(rule,num)
-#endif
+#define Y_DEBUG(rule,num) if(driver.trace_parsing) {printf("(%s[%d]) ",rule,num);}
+
 %}
 /* keep track of the current position within the input */
 %locations
@@ -105,8 +102,8 @@ THE SOFTWARE.
 script
 	: atomdef script                           { Y_DEBUG("script",1); }
 	| procdecl script                          { Y_DEBUG("script",2); }
-	| procdef script
-	| vardef script                            { Y_DEBUG("script",3); }
+	| procdef script                           { Y_DEBUG("script",3); }
+	| vardef script                            { Y_DEBUG("script",4); }
 	| /* empty */
 	;
 
@@ -170,11 +167,6 @@ inline_vardef_no_default
 	// VAR path(/) identifier(honk)
 	: VAR abspath '/' IDENTIFIER                { Y_DEBUG("inline_vardef_no_default",1); }
 	;
-/*
-varslash
-	: VAR '/'
-	;
-*/
 
 inline_vardef
 	: inline_vardef_no_default                      { Y_DEBUG("inline_vardef",1); }
