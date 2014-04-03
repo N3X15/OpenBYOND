@@ -79,7 +79,7 @@ THE SOFTWARE.
 #undef yylex
 #define yylex driver.lexer->lex
 
-#define Y_DEBUG(rule,num) printf(" -> %s[%d] ",rule,num);
+#define Y_DEBUG(rule,num) printf("-> %s[%d] ",rule,num);
 %}
 /* keep track of the current position within the input */
 %locations
@@ -101,6 +101,7 @@ THE SOFTWARE.
 script
 	: atomdef script                           { Y_DEBUG("script",1); }
 	| procdecl script                          { Y_DEBUG("script",2); }
+	| procdef script
 	| vardef script                            { Y_DEBUG("script",3); }
 	| /* empty */
 	;
@@ -116,6 +117,7 @@ pathslash
 
 abspath
 	: '/' relpath                              { Y_DEBUG("abspath",1); }
+	| abspath '/' IDENTIFIER                   { Y_DEBUG("abspath",2); }
 	;
 
 relpath
@@ -124,8 +126,8 @@ relpath
 	;
 	
 procdecl
-	: path procslash procdef                   { Y_DEBUG("procdecl",1); }
-	| path procblock                           { Y_DEBUG("procdecl",2); }
+	: pathslash procslash procdef_no_path      { Y_DEBUG("procdecl",1); }
+	| pathslash procblock                      { Y_DEBUG("procdecl",2); }
 	| procblock                                { Y_DEBUG("procdecl",3); }
 	;
 	
@@ -143,7 +145,7 @@ atomdef
 atom_contents
 	: vardef atom_contents
 	| atomdef atom_contents
-	| procdef atom_contents
+	| procdef_no_path atom_contents
 	| procblock atom_contents
 	| varblock atom_contents
 	| /* empty */
@@ -160,17 +162,19 @@ vardef
 	;
 
 inline_vardef_no_default
-	: varslash IDENTIFIER
-	| varslash pathslash IDENTIFIER
+	// var/honk is basically 
+	// VAR path(/) identifier(honk)
+	: VAR abspath '/' IDENTIFIER                { Y_DEBUG("inline_vardef_no_default",1); }
 	;
-
+/*
 varslash
 	: VAR '/'
 	;
+*/
 
 inline_vardef
-	: inline_vardef
-	| inline_vardef '=' const_expression
+	: inline_vardef_no_default                      { Y_DEBUG("inline_vardef",1); }
+	| inline_vardef_no_default '=' const_expression { Y_DEBUG("inline_vardef",2); }
 	;
 	
 varblock
@@ -178,6 +182,10 @@ varblock
 	;
 	
 procdef
+	: path argblock INDENT expressions DEDENT
+	;
+	
+procdef_no_path
 	: IDENTIFIER argblock INDENT expressions DEDENT
 	;
 	
@@ -186,14 +194,14 @@ argblock
 	;
 
 arguments
-	: /* empty */
+	: inline_vardef
 	| inline_vardef ',' arguments
-	| inline_vardef
+	| /* empty */
 	;
 	
 procdefs
-	: procdef procdefs
-	| procdef
+	: procdef_no_path procdefs
+	| procdef_no_path
 	;
 	
 const_expression
@@ -213,9 +221,9 @@ expression
 	;
 	
 expressions
-	: /* empty */
+	: expression
 	| expression expressions
-	| expression
+	| /* empty */
 	;
 	
 assignable_expression
