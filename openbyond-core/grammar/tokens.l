@@ -79,20 +79,25 @@ int linenum = 1;
 
 %%
 <INDENT_PROCESSING>" "  { current_line_indent++; }
-<INDENT_PROCESSING>"\t" { current_line_indent += (current_line_indent + 4) & ~3; }
+<INDENT_PROCESSING>"\t" { current_line_indent += DM_TAB_WIDTH; }
 <INDENT_PROCESSING>"\n" { current_line_indent = 0; DEBUG_EOL; linenum++; /*ignoring blank line */ }
 <INDENT_PROCESSING>.    {
-		//printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
+#ifdef LEX_TRACE
+		printf("\n[INDENT_PROCESSING - CLI: %3d, CIL: %d] ",current_line_indent,current_indent_level);
+		for(int i = 0;i<current_indent_level;i++)
+			printf("  "); // 2 spaces
+#endif
 		unput(*yytext);
 		if (current_line_indent > indent_level) {
-			indent_stack[current_indent_level++]=indent_level=current_line_indent;
+			indent_stack[++current_indent_level]=indent_level=current_line_indent;
 			DEBUG_TOKEN("INDENT");
 			return token::INDENT;
 		} else if (current_line_indent < indent_level) {
 			current_indent_level--;
-			indent_level=indent_stack[current_indent_level--];
+			indent_level=indent_stack[current_indent_level];
+			//printf(" [nIL=%d]",indent_level);
 			DEBUG_TOKEN("DEDENT");
-			DEBUG_EOL;
+			//DEBUG_EOL;
 			return token::DEDENT;
 		} else {
 			//LEX_DEBUG("<INITIAL>");
@@ -100,13 +105,13 @@ int linenum = 1;
 		}
 	}
 <<EOF>> {
-		//printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
+		printf("\n--- [EOF] INDENT_PROCESSING - CLI: %3d, CIL: %d",current_line_indent,current_indent_level);
 		current_line_indent=0;
 		if (current_indent_level>0) {
 			unput(*yytext);
 			current_indent_level--;
 			DEBUG_TOKEN("DEDENT");
-			DEBUG_EOL;
+			//DEBUG_EOL;
 			return token::DEDENT;
 		} else {
 			yyterminate();
@@ -119,7 +124,7 @@ int linenum = 1;
 			BEGIN INDENT_PROCESSING; 
 		}
 		linenum++;
-		DEBUG_EOL;
+		//DEBUG_EOL;
 	}
 
 %{ /* Bracket "indents".  BYOND is stupid. */ %}
