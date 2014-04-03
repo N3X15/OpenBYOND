@@ -41,7 +41,8 @@ typedef DM::Parser::token_type token_type;
 
 #define MAX_DEPTH 72
 
-#define LEX_TRACE 1
+// Enable this to relentlessly spam your console with lexer tokens.
+//#define LEX_TRACE 1
 
 #ifdef LEX_TRACE
 #define LEX_DEBUG(x)   printf("%s", x)

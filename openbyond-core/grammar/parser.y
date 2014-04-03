@@ -79,7 +79,11 @@ THE SOFTWARE.
 #undef yylex
 #define yylex driver.lexer->lex
 
-#define Y_DEBUG(rule,num) printf("-> %s[%d] ",rule,num);
+#ifdef PARSER_DEBUG
+#define Y_DEBUG(rule,num) printf("%s[%d] ",rule,num)
+#else
+#define Y_DEBUG(rule,num)
+#endif
 %}
 /* keep track of the current position within the input */
 %locations
