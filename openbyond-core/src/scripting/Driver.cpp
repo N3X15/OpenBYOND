@@ -55,9 +55,9 @@ void Driver::error(const std::string& m)
     std::cerr << m << std::endl;
 }
 
-Atom* Driver::pushContext(std::string& atomfragment) 
+Atom* Driver::pushContext(TokenizedPath atom_path) 
 {
-	std::vector<std::string> atom_path = split(atomfragment,'/');
+	//std::vector<std::string> atom_path = ;
 	int poplevel;
 	int indentlevel = lexer->get_indent_level();
 	if(indentlevel == 0) {

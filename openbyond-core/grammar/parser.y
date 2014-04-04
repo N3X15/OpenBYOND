@@ -78,16 +78,17 @@ class Atom;
 #define yylex driver.lexer->lex
 
 #define Y_DEBUG(rule,num) if(driver.trace_parsing) {printf("(%s[%d]) ",rule,num);}
-
 %}
 
 %union {
 	char* strval;
 	DMNode* node;
+	std::vector<std::string>* path;
 	Atom* atom;
 }
 
-%type <strval> IDENTIFIER path abspath relpath pathslash;
+%type <strval> IDENTIFIER;
+%type <path> path abspath relpath pathslash;
 %type <atom> atomdef procdef;
 
 /* keep track of the current position within the input */
@@ -122,46 +123,38 @@ path
 	
 pathslash
 	: path '/'                                 { Y_DEBUG("pathslash", 1);
-		char *o;
-		int size = asprintf(&o, "%s/",$1);
-		if(size<0) {
-			o = NULL;
-		}
+		std::vector<std::string>* o = $1;
+		o->push_back("");
 		$$ = o;
 	}
 	;
 
 abspath
-	: '/' relpath                              { 
-		Y_DEBUG("abspath",1);
-		char *o;
-		int size = asprintf(&o, "/%s",$2);
-		if(size<0) {
-			o = NULL;
-		}
+	: '/' relpath {
+		std::vector<std::string>* o = $2;
+		o->insert(o->begin(),std::string(""));
 		$$ = o;
 	}
 	| abspath '/' IDENTIFIER                   { Y_DEBUG("abspath",2);
-		char *o;
-		int size = asprintf(&o, "%s/%s",$1,$3);
-		if(size<0) {
-			$$ = NULL;
-		} else {
-			$$ = o;
-		}
+		std::vector<std::string>* o = $1;
+		std::string identifier = std::string($3);
+		o->push_back(identifier);
+		$$ = o;
 	}
 	;
 
 relpath
-	: IDENTIFIER                               { Y_DEBUG("relpath",1); $$ = $1; }
+	: IDENTIFIER                               { Y_DEBUG("relpath",1);
+		std::vector<std::string>* o = new std::vector<std::string>();
+		std::string identifier = std::string($1);
+		o->push_back(identifier);
+		$$ = o;
+	}
 	| relpath '/' IDENTIFIER                   { Y_DEBUG("relpath",2);
-		char *o;
-		int size = asprintf(&o, "%s/%s",$1,$3);
-		if(size<0) {
-			$$ = NULL;
-		} else {
-			$$ = o;
-		}
+		std::vector<std::string>* o = $1;
+		std::string identifier = std::string($3);
+		o->push_back(identifier);
+		$$ = o;
 	}
 	;
 	
@@ -182,8 +175,7 @@ atomdef
 	: path INDENT atom_contents DEDENT         { 
 		Y_DEBUG("atomdef",1); 
 		//printf("atomdef: %s\n",$1);
-		std::string fragment = std::string($1);
-		$$ = driver.pushContext(fragment);
+		$$ = driver.pushContext((DM::Driver::TokenizedPath)(*$1));
 	}
 	;
 	
@@ -224,8 +216,10 @@ varblock
 procdef
 	: path argblock INDENT expressions DEDENT {
 		Y_DEBUG("procdef",1);
-		std::string fragment = std::string($1);
-		$$ = driver.pushContext(fragment);
+		std::vector<std::string>* path = $1;
+		std::string identifier = path->back();
+		path->pop_back();
+		$$ = driver.pushContext((DM::Driver::TokenizedPath)(*path));
 	}
 	;
 	

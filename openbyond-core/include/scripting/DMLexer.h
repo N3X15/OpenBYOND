@@ -16,6 +16,7 @@ DM::Lexer::lex( \
 #include "Atom.h"
 #include "scripting/Nodes.h"
 #include "parser.hpp"
+
 namespace DM {
 class Lexer : public yyFlexLexer
 {

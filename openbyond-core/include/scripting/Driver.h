@@ -8,6 +8,7 @@
 #include "Atom.h"
 #include "scripting/Nodes.h"
 
+
 namespace DM {
 
 /** The Driver class brings together all components. It creates an instance of
@@ -19,6 +20,9 @@ namespace DM {
 class Driver
 {
 public:
+	// Typedef
+	typedef std::vector<std::string> TokenizedPath;
+	
 	/// construct a new parser driver context
 	Driver();
 
@@ -70,9 +74,9 @@ public:
 
 	/** Push an atom to the context stack.
 	* This is used to construct the ObjectTree and determine where children are on the aforementioned tree.
-	* @param atomfragment Atom fragment (/obj, gun/barry)
+	* @param atomfragment Atom fragment ({,obj}, {gun,barry})
 	*/
-	Atom* pushContext(std::string& atomfragment);
+	Atom* pushContext(TokenizedPath atomfragment);
 	
 	/**
 	 * Handle unindenting x levels.
@@ -87,16 +91,16 @@ public:
 	void pushIndent(int levels);
     
 private:
-	typedef std::vector<std::string> PathVector;
 	// Context stack
 	// 
 	// /obj/item/knife = {obj,item,knife}
-	PathVector context;
+	TokenizedPath context;
 	
 	std::vector<int> popLevels;
 	std::map<std::string, Atom*> atoms;
 	int pindent;
 };
 }
+typedef DM::Driver::TokenizedPath DMTokenPath;
 
 #endif // DRIVER_H
