@@ -53,7 +53,7 @@ int indent_stack[200];         /* Stack of indents. */
 int current_indent_level = 0;  /* indentation of the current line */
 int bracket_indent_level = 0;  /* indentations given by brackets because BYOND is fucking dumb. */
 int indent_level = 0;          /* indentation level passed to the parser */
-
+int nested_comments = 0;       /* How many nested comments do we have on the stack. */
 /* Current position */
 int linenum = 1;
 
@@ -146,7 +146,16 @@ bool trace = false;
 \/\*                    { BEGIN MULTICOMMENT; }
 <MULTICOMMENT>\\.       { ; }
 <MULTICOMMENT>\\\n      { linenum++; }
-<MULTICOMMENT>\*\/      { BEGIN INITIAL; }
+<MULTICOMMENT>\/\*      {
+	nested_comments++;
+}
+<MULTICOMMENT>\*\/      { 
+	if(nested_comments>0) {
+		nested_comments--;
+	} else {
+		BEGIN INITIAL;
+	}
+}
 <MULTICOMMENT>.         { ; }
 <MULTICOMMENT>\n        { linenum++; }
 

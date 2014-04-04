@@ -1,6 +1,20 @@
 /atom
 	proc
-		who_cares(var/butts)
+		who_cares(var/datum/butts)
 			return 5
-/atom/atom2/who_cares(var/butts)
+
+/* Some  stuff
+Other stuff
+*/
+// Single line comment
+
+/* 
+#ifdef USE_WHO_CARE
+/* Documentation */
+/atom/atom2/who_cares(var/datum/butts)
 	return 5
+#else
+/atom/atom2/who_cares(var/datum/butts)
+	return 0
+#endif
+*/
