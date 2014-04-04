@@ -202,6 +202,7 @@ inline_vardef_no_default
 	// var/honk is basically 
 	// VAR path(/) identifier(honk)
 	: VAR abspath '/' IDENTIFIER                { Y_DEBUG("inline_vardef_no_default",1); }
+	| VAR '/' IDENTIFIER                        { Y_DEBUG("inline_vardef_no_default",2); }
 	;
 
 inline_vardef
