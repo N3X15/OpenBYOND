@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include "vector_utils.h"
 #include "string_utils.h"
 
+ObjectTree::~ObjectTree() {}
+
 void ObjectTree::BuildTree() {
 	// Initialize an empty tree.
 	tree = new Atom("/");
@@ -47,16 +49,16 @@ void ObjectTree::BuildTree() {
 	std::vector<std::string>::size_type i;
 	AtomMap::iterator foundChild;
 	for (iter = atoms.begin(); iter != atoms.end(); ++iter) {
-		atom = &iter->second;
+		atom = iter->second;
 		cpath.clear();
-        cNode = this->tree;
+		cNode = this->tree;
 
 		// Split path into chunks.
-        fullpath = cNode->splitPath();
+		fullpath = cNode->splitPath();
 
-		// Ignore the first chunk (root of the tre)
-        truncatedpath = VectorCopy<std::string>(fullpath,1);
-
+		// Ignore the first chunk (root of the tree)
+		truncatedpath = VectorCopy<std::string>(fullpath,1);
+		
 		// Iterate through each path segment up the tree.
 		for(i=0;i<truncatedpath.size();i++) {
 			// Figure out where we are.
@@ -65,7 +67,7 @@ void ObjectTree::BuildTree() {
 			cpath_str = string_join("/",cpath);
 			if(cNode->children.count(path_item)==1) {
 				if(this->atoms.count(cpath_str)==1){
-					cNode->children[path_item] = &this->atoms[cpath_str];
+					cNode->children[path_item] = this->atoms[cpath_str];
 				} else {
 					//if '(' in path_item:
 					//    cNode.children[path_item] = Proc('/'.join([''] + cpath), [])
@@ -76,10 +78,33 @@ void ObjectTree::BuildTree() {
 				cNode->children[path_item]->parent = cNode;
 				if(parent_type != cNode->path) {
 					printf(" - Parent of %s forced to be %s",cNode->children[path_item]->path.c_str(), parent_type.c_str());
-					cNode->children[path_item]->parent = &this->atoms[parent_type];
+					cNode->children[path_item]->parent = this->atoms[parent_type];
 				}
 			}
-            cNode = cNode->children[path_item];
+			cNode = cNode->children[path_item];
 		}
 	}
+}
+
+void ObjectTree::Clear() {
+	delete this->tree;
+	this->atoms.clear();
+}
+
+Atom *ObjectTree::GetAtom(std::string path) {
+	std::map<std::string,Atom*>::iterator it;
+	it = atoms.find(path);
+	if(it == atoms.end()) {
+		return NULL;
+	} else {
+		return atoms[path];
+	}
+}
+Atom *ObjectTree::AddAtom(Atom *a) {
+	std::map<std::string,Atom*>::iterator it;
+	it = atoms.find(a->path);
+	if(it == atoms.end()) {
+		atoms[a->path]=a;
+	}
+	return atoms[a->path];
 }

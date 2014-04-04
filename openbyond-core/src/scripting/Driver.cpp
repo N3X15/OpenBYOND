@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "string_utils.h"
+#include "ObjectTree.h"
 
 #include "scripting/Driver.h"
 #include "scripting/DMLexer.h"
@@ -94,13 +95,13 @@ Atom* Driver::pushContext(TokenizedPath atom_path)
 	}
 	
 	std::string npath;
-	implode(this->context,',',npath);
+	implode(this->context,'/',npath);
 	
 	printf("[Driver::pushContext] PLs = %3d, Context = %s\n",popLevels.size(),npath.c_str());
 	
-	std::map<std::string,Atom*>::iterator it;
-	it = this->atoms.find(npath);
-	if(it != this->atoms.end()) {
+	
+	Atom* found = ObjectTree::getInstance().GetAtom(npath);
+	if(found==NULL) {
 		/*if procArgs is not None:
 			assert npath.endswith(')')
 			proc = Proc(npath, procArgs, filename, ln)
@@ -108,10 +109,10 @@ Atom* Driver::pushContext(TokenizedPath atom_path)
 			proc.definition = 'proc' in defs
 			this->Atoms[npath] = proc
 		else*/
-		this->atoms[npath] = new Atom(npath, "", 0);
+		found = ObjectTree::getInstance().AddAtom(new Atom(npath, "", 0));
 	}
 	this->pindent = indentlevel;
-	return this->atoms[npath];
+	return found;
 }
 
 } // End DM Namespace.
