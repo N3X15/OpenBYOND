@@ -72,19 +72,19 @@ public:
 	* This is used to construct the ObjectTree and determine where children are on the aforementioned tree.
 	* @param atomfragment Atom fragment (/obj, gun/barry)
 	*/
-	void pushContext(std::string& atomfragment);
-
-	/** Push a proc to the current atom.
-	* @param atomfragment Atom fragment (/obj, gun/barry, empty)
-	* @param name Name of the proc.
-	*/
-	Atom* pushContext(int indent, std::string& atomfragment, DMArguments arguments, int flags);
+	Atom* pushContext(std::string& atomfragment);
 	
 	/**
 	 * Handle unindenting x levels.
 	 * @param levels How many levels to dedent.
 	 */
-	void popContext(int levels);
+	void popIndent(int levels);
+	
+	/**
+	 * Handle indenting x levels.
+	 * @param levels How many levels to indent.
+	 */
+	void pushIndent(int levels);
     
 private:
 	typedef std::vector<std::string> PathVector;

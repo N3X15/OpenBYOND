@@ -13,7 +13,8 @@ DM::Lexer::lex( \
 	DM::Parser::semantic_type* yylval, \
 	DM::Parser::location_type* yylloc \
 )
- 
+#include "Atom.h"
+#include "scripting/Nodes.h"
 #include "parser.hpp"
 namespace DM {
 class Lexer : public yyFlexLexer
@@ -27,6 +28,8 @@ public:
 	virtual Parser::token_type lex(Parser::semantic_type* yylval, Parser::location_type* yylloc);
 	
 	void set_debug_level(bool on);
+	
+	int get_indent_level();
 	 
 private:
 	/* hide this one from public view */

@@ -213,7 +213,10 @@ int Lexer::yylex()
 }
 void Lexer::set_debug_level(bool b)
 {
-    trace = b;
+	trace = b;
+}
+int Lexer::get_indent_level() {
+	return current_indent_level;
 }
 }
 
@@ -227,8 +230,8 @@ void Lexer::set_debug_level(bool b)
 
 int yyFlexLexer::yylex()
 {
-    std::cerr << "in Lexer::yylex() !" << std::endl;
-    return 0;
+	std::cerr << "in Lexer::yylex() !" << std::endl;
+	return 0;
 }
 
 /* When the scanner receives an end-of-file indication from YY_INPUT, it then
@@ -239,11 +242,11 @@ int yyFlexLexer::yylex()
 /*
 int yyFlexLexer::yywrap()
 {
-    return 1;
+	return 1;
 }
 */
 int yyerror (const char *s)
 {
-    printf("Parser error[%d]: %s \n",linenum,s);
-    return 0;
+	printf("Parser error[%d]: %s \n",linenum,s);
+	return 0;
 }

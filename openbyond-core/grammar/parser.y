@@ -60,21 +60,19 @@ THE SOFTWARE.
 %nonassoc UMINUS
 %nonassoc '(' ')'
 
-%union {
-	char* strval;
-}
-
-%type <strval> IDENTIFIER;
-
 %{
+class DMNode;
+class Atom;
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "string_utils.h"
 #include "parser.hpp"
+#include "Atom.h"
 #include "scripting/Driver.h"
 #include "scripting/DMLexer.h"
+#include "scripting/Nodes.h"
 
 #undef yylex
 #define yylex driver.lexer->lex
@@ -82,6 +80,16 @@ THE SOFTWARE.
 #define Y_DEBUG(rule,num) if(driver.trace_parsing) {printf("(%s[%d]) ",rule,num);}
 
 %}
+
+%union {
+	char* strval;
+	DMNode* node;
+	Atom* atom;
+}
+
+%type <strval> IDENTIFIER path abspath relpath;
+%type <atom> atomdef;
+
 /* keep track of the current position within the input */
 %locations
 %initial-action
@@ -108,8 +116,8 @@ script
 	;
 
 path
-	: abspath                                  { Y_DEBUG("path",1); }
-	| relpath                                  { Y_DEBUG("path",2); }
+	: abspath                                  { Y_DEBUG("path",1); $$ = $1;}
+	| relpath                                  { Y_DEBUG("path",2); $$ = $1;}
 	;
 	
 pathslash
@@ -117,13 +125,37 @@ pathslash
 	;
 
 abspath
-	: '/' relpath                              { Y_DEBUG("abspath",1); }
-	| abspath '/' IDENTIFIER                   { Y_DEBUG("abspath",2); }
+	: '/' relpath                              { 
+		Y_DEBUG("abspath",1);
+		char *o;
+		int size = asprintf(&o, "/%s",$2);
+		if(size<0) {
+			o = NULL;
+		}
+		$$ = o;
+	}
+	| abspath '/' IDENTIFIER                   { Y_DEBUG("abspath",2);
+		char *o;
+		int size = asprintf(&o, "%s/%s",$1,$3);
+		if(size<0) {
+			$$ = NULL;
+		} else {
+			$$ = o;
+		}
+	}
 	;
 
 relpath
-	: IDENTIFIER                               { Y_DEBUG("relpath",1); }
-	| relpath '/' IDENTIFIER                   { Y_DEBUG("relpath",2); }
+	: IDENTIFIER                               { Y_DEBUG("relpath",1); $$ = $1; }
+	| relpath '/' IDENTIFIER                   { Y_DEBUG("relpath",2);
+		char *o;
+		int size = asprintf(&o, "%s/%s",$1,$3);
+		if(size<0) {
+			$$ = NULL;
+		} else {
+			$$ = o;
+		}
+	}
 	;
 	
 procdecl
@@ -140,7 +172,12 @@ procblock
 	;
 
 atomdef
-	: path INDENT atom_contents DEDENT         { Y_DEBUG("atomdef",1); }
+	: path INDENT atom_contents DEDENT         { 
+		Y_DEBUG("atomdef",1); 
+		printf("atomdef: %s\n",$1);
+		std::string fragment = std::string($1);
+		$$ = driver.pushContext(fragment);
+	}
 	;
 	
 atom_contents

@@ -55,10 +55,11 @@ void Driver::error(const std::string& m)
     std::cerr << m << std::endl;
 }
 
-Atom* Driver::pushContext(int indentlevel, std::string& atomfragment, DMArguments arguments, int flags) 
+Atom* Driver::pushContext(std::string& atomfragment) 
 {
 	std::vector<std::string> atom_path = split(atomfragment,'/');
 	int poplevel;
+	int indentlevel = lexer->get_indent_level();
 	if(indentlevel == 0) {
 		this->context = atom_path;
 		if(this->context.size() == 0) {
