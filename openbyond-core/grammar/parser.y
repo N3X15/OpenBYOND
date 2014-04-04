@@ -87,8 +87,8 @@ class Atom;
 	Atom* atom;
 }
 
-%type <strval> IDENTIFIER path abspath relpath;
-%type <atom> atomdef;
+%type <strval> IDENTIFIER path abspath relpath pathslash;
+%type <atom> atomdef procdef;
 
 /* keep track of the current position within the input */
 %locations
@@ -121,7 +121,14 @@ path
 	;
 	
 pathslash
-	: path '/'                                 { Y_DEBUG("pathslash", 1); }
+	: path '/'                                 { Y_DEBUG("pathslash", 1);
+		char *o;
+		int size = asprintf(&o, "%s/",$1);
+		if(size<0) {
+			o = NULL;
+		}
+		$$ = o;
+	}
 	;
 
 abspath
@@ -174,7 +181,7 @@ procblock
 atomdef
 	: path INDENT atom_contents DEDENT         { 
 		Y_DEBUG("atomdef",1); 
-		printf("atomdef: %s\n",$1);
+		//printf("atomdef: %s\n",$1);
 		std::string fragment = std::string($1);
 		$$ = driver.pushContext(fragment);
 	}
@@ -215,7 +222,11 @@ varblock
 	;
 	
 procdef
-	: path argblock INDENT expressions DEDENT
+	: path argblock INDENT expressions DEDENT {
+		Y_DEBUG("procdef",1);
+		std::string fragment = std::string($1);
+		$$ = driver.pushContext(fragment);
+	}
 	;
 	
 procdef_no_path
