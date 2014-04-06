@@ -15,12 +15,13 @@ IgnoreState::IgnoreState(std::string start, bool ignoring, ...):
 	endtokens()
 {
 	int n;
+	const char *endTokenC;
 	std::string endToken;
 	va_list vl;
-	va_start(vl,n);
-	for (int i=0;i<n;i++)
+	va_start(vl,ignoring);
+	while((endTokenC=va_arg(vl,const char*)) != NULL)
 	{
-		endToken=std::string(va_arg(vl,const char*));
+		endToken=std::string(endTokenC);
 		endtokens.push_back(endToken);
 	}
 	va_end(vl);
@@ -142,13 +143,13 @@ void Preprocessor::consumeIfdef(std::vector<std::string> args){
 	std::map<std::string,std::string>::iterator it;
 	std::string defname = args[0];
 	it = defines.find(defname);
-	ignoreStack.push_back(IgnoreState("ifdef",it != defines.end(),"else","endif"));
+	ignoreStack.push_back(IgnoreState("ifdef",it != defines.end(),"else","endif",NULL));
 }
 
 void Preprocessor::consumeIfndef(std::vector<std::string> args){
 	std::map<std::string,std::string>::iterator it;
 	it = defines.find(args[0]);
-	ignoreStack.push_back(IgnoreState("ifndef",it == defines.end(),"else","endif"));
+	ignoreStack.push_back(IgnoreState("ifndef",it == defines.end(),"else","endif",NULL));
 }
 
 void Preprocessor::consumeElse(std::vector<std::string> args) {
