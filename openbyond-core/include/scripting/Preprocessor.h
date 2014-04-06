@@ -57,6 +57,8 @@ private:
 	std::vector<IgnoreState> ignoreStack;
 	
 	void rewindBuffer(std::string &buf, int numchars);
+	void rewindStream(std::iostream &stream, int numchars);
+	
 	void consumeUntil(std::iostream &fin, std::iostream &fout, char endmarker);
 	void consumeUntil(std::iostream &fin, std::iostream &fout, std::string endmarker);
 	void consumePPToken(std::iostream &fin, std::iostream &fout);

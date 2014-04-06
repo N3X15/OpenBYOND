@@ -38,6 +38,9 @@ Preprocessor::~Preprocessor() {;}
 void Preprocessor::rewindBuffer(std::string &buf, int numchars) {
 	buf=buf.substr(0,buf.length()-(numchars+1));
 }
+void Preprocessor::rewindStream(std::iostream &stream, int numchars) {
+	stream.seekg(-numchars,stream.cur);
+}
 	
 std::string Preprocessor::ParseFile(std::string filename) {
 	std::fstream fin(filename, std::fstream::in);
@@ -51,9 +54,6 @@ std::string Preprocessor::ParseFile(std::string filename) {
 		fin.close();
 		return "";
 	}
-	fout << "/// OpenBYOND Preprocessed Code\r\n";
-	fout << "/// File: " << filename << "\r\n";
-	fout << "///\r\n\r\n";
 	
 	ParseStream(fin,fout,filename);
 	
@@ -63,9 +63,13 @@ std::string Preprocessor::ParseFile(std::string filename) {
 }
 
 void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::string streamname) {
+	fout << "/// OpenBYOND Preprocessed Code\r\n";
+	fout << "/// File: " << streamname << "\r\n";
+	fout << "///\r\n\r\n";
 	// Parse char by char
 	char c;
-	char lastchar;
+	char lastchar=0;
+	char nextlastchar=0;
 	std::string buf;
 	bool escape=false;
 	bool encounteredOtherCharacters = false;
@@ -77,16 +81,18 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 	while (fin >> std::noskipws >> c) {
 		// Skip windows return characters.
 		token="";
-		if(lastchar)
+		if(nextlastchar)
+			lastchar = nextlastchar;
 			token += lastchar;
 		token += c;
+		nextlastchar=c;
 		if(c == '\r') continue;
 		if(c == '\n' && !escape) {
 			line++;
 			while(hasEnding(buf,"\n")||hasEnding(buf,"\r")) {
 				buf = trim(buf," \t\r\n");
 			}
-			if(!IsIgnoring())
+			if(!IsIgnoring() && endtokens.size()==0)
 				fout << buf;// << "\r\n";
 			buf = "";
 			encounteredOtherCharacters=false;
@@ -94,30 +100,53 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 			escape=true;
 			continue;
 		} else if(c == '#') {
+			if(endtokens.size()>0) continue;
 			if(encounteredOtherCharacters && ignorelevel == 0){
 				printf("%s:%d [PP] ERROR:  Encountered non-whitespace characters before preprocessor token!",streamname.c_str(),line);
 				return;
 			}
 			consumePPToken(fin,fout);
+			lastchar=0;
 			continue;
 		} else if(c == '"' || c == '\'') {
+			std::stringstream o("");
+			o << c;
 			if(c=='"' && lastchar == '{')
-				consumeUntil(fin,fout,"\"}");
+				consumeUntil(fin,o,"\"}");
 			else
-				consumeUntil(fin,fout,c);
+				consumeUntil(fin,o,c);
+			o << c;
+			if(!IsIgnoring() && endtokens.size()==0) 
+				buf += o.str();
 			continue;
 		} else if(lastchar == '/' && c == '/') {
-			consumeUntil(fin,fout,'\n');
+			std::stringstream devnull("");
+			consumeUntil(fin,devnull,'\n');
+			printf("Discarded \"//%s\"\n",devnull.str().c_str());
+			rewindBuffer(buf,1);
+			rewindStream(fin,1);
+			encounteredOtherCharacters=false;
+			lastchar=0;
 			continue;
 		} else {
-			encounteredOtherCharacters=true;
+			if(c!='\t'&&c!=' ')
+				encounteredOtherCharacters=true;
 		}
-		
+		printf("TOKEN %s\n",token.c_str());
 		if(token=="/*") {
+			printf("BEGIN COMMENT\n");
 			endtokens.push("*/");
 			rewindBuffer(buf,1);
 			continue;
+		} else {
+			if(endtokens.size()>0 && endtokens.top() == token){
+				printf("END COMMENT\n");
+				endtokens.pop();
+				rewindBuffer(buf,1);
+			}
 		}
+		if(endtokens.size()>0)
+			continue;
 		buf += c; // Or whatever
 	}
 }
@@ -216,7 +245,7 @@ void Preprocessor::consumePPToken(std::iostream &fin, std::iostream &fout) {
 	std::string token = args[0];
 	args=VectorCopy<std::string>(args,1);
 	
-	fout << "/* Found #" << token << ". */";
+	//fout << "/* Found #" << token << ". */";
 	
 	consumePreprocessorToken(token,args);
 }
