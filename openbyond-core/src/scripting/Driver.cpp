@@ -2,6 +2,7 @@
 * DMScript Driver
 */
 
+#include <cassert>
 #include <fstream>
 #include <sstream>
 
@@ -10,15 +11,16 @@
 
 #include "scripting/Driver.h"
 #include "scripting/DMLexer.h"
+#include "scripting/Preprocessor.h"
 
 namespace DM {
 
 Driver::Driver()
     : trace_scanning(false),
       trace_parsing(false),
-      trace_preprocessing(false),
-      preprocessor()
+      trace_preprocessing(false)
 {
+	preprocessor = new Preprocessor();
 }
 
 bool Driver::parse_stream(std::iostream& in, const std::string& sname)
@@ -41,6 +43,7 @@ bool Driver::parse_file(const std::string &filename)
     std::string outfile=filename+".dmpp";
     std::fstream out(outfile.c_str(),std::fstream::out);
     if (!out.good()) return false;
+    assert(preprocessor != 0);
     preprocessor->ParseStream(in,out,filename);
     std::cout << ">>> " << outfile << " written!" << std::endl;
     out.close();
