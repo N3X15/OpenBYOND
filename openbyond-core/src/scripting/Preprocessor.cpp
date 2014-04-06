@@ -86,7 +86,8 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 			while(hasEnding(buf,"\n")||hasEnding(buf,"\r")) {
 				buf = trim(buf," \t\r\n");
 			}
-			fout << buf;// << "\r\n";
+			if(!IsIgnoring())
+				fout << buf;// << "\r\n";
 			buf = "";
 			encounteredOtherCharacters=false;
 		} else if(c == '\\') {
@@ -211,15 +212,11 @@ void Preprocessor::consumePPToken(std::iostream &fin, std::iostream &fout) {
 	consumeUntil(fin,buf,'\n');
 	std::string line = buf.str();
 	line=trim(line," \t\r\n");
-	printf("consumeUntil(\\n): %s\n",line.c_str());
 	std::vector<std::string> args = split(line,' ');
-	printf("split(' '): %d items\n",args.size());
 	std::string token = args[0];
-	printf("token: %s\n",token.c_str());
 	args=VectorCopy<std::string>(args,1);
-	printf("VectorCopy(1): %d items\n",args.size());
 	
-	fout << "/* Found #" << token << line << ". */";
+	fout << "/* Found #" << token << ". */";
 	
 	consumePreprocessorToken(token,args);
 }
