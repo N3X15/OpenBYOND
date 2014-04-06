@@ -85,11 +85,13 @@ set(DMSCRIPT_SOURCE
 	${FLEX_DMScanner_OUTPUTS}
 	${BISON_DMParser_OUTPUTS}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/Driver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/Preprocessor.cpp
 	)
 set(DMSCRIPT_INCLUDE
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/DMLexer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/Driver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/Nodes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/Preprocessor.h
 	)
 
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_INCLUDE})

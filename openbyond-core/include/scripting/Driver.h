@@ -7,6 +7,7 @@
 
 #include "Atom.h"
 #include "scripting/Nodes.h"
+#include "scripting/Preprocessor.h"
 
 
 namespace DM {
@@ -32,6 +33,9 @@ public:
 	/// enable debug output in the bison parser
 	bool trace_parsing;
 
+	/// enable debug output in the shitty preprocessor
+	bool trace_preprocessing;
+
 	/// stream name (file or input stream) used for error messages.
 	std::string streamname;
 
@@ -40,7 +44,7 @@ public:
 	* @param sname	stream name for error messages
 	* @return		true if successfully parsed
 	*/
-	bool parse_stream(std::istream& in, const std::string& sname = "stream input");
+	bool parse_stream(std::iostream& in, const std::string& sname = "stream input");
 
 	/** Invoke the scanner and parser on an input string.
 	* @param input	input string
@@ -71,6 +75,8 @@ public:
 	/** Pointer to the current lexer instance, this is used to connect the
 	* parser to the scanner. It is used in the yylex macro. */
 	class Lexer* lexer;
+	
+	Preprocessor* preprocessor;
 
 	/** Push an atom to the context stack.
 	* This is used to construct the ObjectTree and determine where children are on the aforementioned tree.

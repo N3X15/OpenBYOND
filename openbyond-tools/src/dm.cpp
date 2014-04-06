@@ -14,14 +14,15 @@ int main(int argc, char *argv[])
 	std::cout << std::endl;
 	for(int i = 1; i < argc; ++i)
 	{
+		/*
 		std::fstream infile(argv[i]);
 		if (!infile.good())
 		{
 			std::cerr << "!!! Could not open file: " << argv[i] << std::endl;
 			return 0;
 		}
-		
-		bool result = driver.parse_stream(infile, argv[i]);
+		*/
+		bool result = driver.parse_file(argv[i]);
 		if (result)
 		{
 			std::cout << ">>> Finished reading "<< argv[i] << "." << std::endl;

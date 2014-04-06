@@ -15,34 +15,47 @@ namespace DM {
 
 Driver::Driver()
     : trace_scanning(false),
-      trace_parsing(false)
+      trace_parsing(false),
+      trace_preprocessing(false),
+      preprocessor()
 {
 }
 
-bool Driver::parse_stream(std::istream& in, const std::string& sname)
+bool Driver::parse_stream(std::iostream& in, const std::string& sname)
 {
-    streamname = sname;
+	streamname = sname;
+	
+	Lexer scanner(&in);
+	scanner.set_debug_level(trace_scanning);
+	this->lexer = &scanner;
 
-    Lexer scanner(&in);
-    scanner.set_debug_level(trace_scanning);
-    this->lexer = &scanner;
-
-    Parser parser(*this);
-    parser.set_debug_level(trace_parsing);
-    return (parser.parse() == 0);
+	Parser parser(*this);
+	parser.set_debug_level(trace_parsing);
+	return (parser.parse() == 0);
 }
 
 bool Driver::parse_file(const std::string &filename)
 {
-    std::ifstream in(filename.c_str());
+    std::fstream in(filename.c_str());
     if (!in.good()) return false;
+    std::string outfile=filename+".dmpp";
+    std::fstream out(outfile.c_str(),std::fstream::out);
+    if (!out.good()) return false;
+    preprocessor->ParseStream(in,out,filename);
+    std::cout << ">>> " << outfile << " written!" << std::endl;
+    out.close();
+    in.seekg(0);
     return parse_stream(in, filename);
 }
 
 bool Driver::parse_string(const std::string &input, const std::string& sname)
 {
-    std::istringstream iss(input);
-    return parse_stream(iss, sname);
+	std::stringstream iss(input);
+	std::string pp_internal("");
+	std::stringstream preprocessed(pp_internal);
+
+	preprocessor->ParseStream(iss,preprocessed,streamname);
+	return parse_stream(preprocessed, sname);
 }
 
 void Driver::error(const class location& l,

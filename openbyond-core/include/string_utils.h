@@ -39,4 +39,12 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
 std::vector<std::string> split(const std::string &s, char delim);
 
 void implode(const std::vector<std::string>& elems, char delim, std::string& s);
+
+bool hasEnding (std::string const &fullString, std::string const &ending);
+
+std::string trim(const std::string& str,
+                 const std::string& whitespace = " \t");
+std::string reduce(const std::string& str,
+                   const std::string& fill = " ",
+                   const std::string& whitespace = " \t");
 #endif // HAVE_STRING_UTILS_H
