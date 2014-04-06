@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[])
 {
-	DM::Driver driver;
+	DM::Driver *driver = new DM::Driver();
 	std::cout << "OpenBYOND DM Parser Prototype" << std::endl;
 	std::cout << "___________________________________" << std::endl;
 	std::cout << std::endl;
@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 			return 0;
 		}
 		*/
-		bool result = driver.parse_file(argv[i]);
+		bool result = driver->parse_file(argv[i]);
 		if (result)
 		{
 			std::cout << ">>> Finished reading "<< argv[i] << "." << std::endl;

@@ -35,8 +35,7 @@ int vasprintf(char **str, const char *fmt, va_list ap);
 int asprintf(char **str, const char *fmt, ...);
 #endif
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
-std::vector<std::string> split(const std::string &s, char delim);
+std::vector<std::string> split(std::string s, char delim);
 
 void implode(const std::vector<std::string>& elems, char delim, std::string& s);
 

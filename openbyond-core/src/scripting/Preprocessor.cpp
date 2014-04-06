@@ -140,7 +140,8 @@ bool Preprocessor::IsIgnoring() {
 }
 void Preprocessor::consumeIfdef(std::vector<std::string> args){
 	std::map<std::string,std::string>::iterator it;
-	it = defines.find(args[0]);
+	std::string defname = args[0];
+	it = defines.find(defname);
 	ignoreStack.push_back(IgnoreState("ifdef",it != defines.end(),"else","endif"));
 }
 
@@ -209,11 +210,13 @@ void Preprocessor::consumePPToken(std::iostream &fin, std::iostream &fout) {
 	consumeUntil(fin,buf,'\n');
 	std::string line = buf.str();
 	line=trim(line," \t\r\n");
+	printf("consumeUntil(\\n): %s\n",line.c_str());
 	std::vector<std::string> args = split(line,' ');
+	printf("split(' '): %d items\n",args.size());
 	std::string token = args[0];
 	args=VectorCopy<std::string>(args,1);
 	
-	consumePreprocessorToken(token,args);
+	fout << "/* Found #" << token << line << ". */";
 	
-	fout << "/* Found #" << token << ". */";
+	consumePreprocessorToken(token,args);
 }

@@ -168,20 +168,21 @@ int asprintf(char **str, const char *fmt, ...)
 }
 #endif
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-    std::stringstream ss(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
-}
-
-
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    split(s, delim, elems);
-    return elems;
+std::vector<std::string> split(std::string s, char delim) {
+	size_t pos = 0;
+	std::vector<std::string> elems;
+	std::string buffer("");
+	for(pos=0;pos<s.length();pos++) {
+		char c = s[pos];
+		if(c==delim){
+			elems.push_back(buffer);
+			buffer = "";
+			continue;
+		}
+		buffer += c;
+	}
+	elems.push_back(buffer);
+	return elems;
 }
 
 struct appender
