@@ -214,8 +214,9 @@ void Preprocessor::consumePPToken(std::iostream &fin, std::iostream &fout) {
 	std::vector<std::string> args = split(line,' ');
 	printf("split(' '): %d items\n",args.size());
 	std::string token = args[0];
+	printf("token: %s\n",token.c_str());
 	args=VectorCopy<std::string>(args,1);
-	printf("VectorCopy(1): %d items",args.size());
+	printf("VectorCopy(1): %d items\n",args.size());
 	
 	fout << "/* Found #" << token << line << ". */";
 	

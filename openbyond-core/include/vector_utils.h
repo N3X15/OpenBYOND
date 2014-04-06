@@ -25,7 +25,7 @@ std::vector<T,A> VectorCopy(std::vector<T,A> origin, int start = 0, int end = 0,
 	}
 	//assert(_end > _start);
 	std::vector<T> copy;
-	for(std::vector<int>::size_type i = _start; i < _end; i += step){
+	for(std::vector<int>::size_type i = _start; i <= _end; i += step){
 		copy.push_back(origin[i]);
 	}
 	return copy;
