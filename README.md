@@ -34,7 +34,8 @@ Windows users should install flex and bison through Cygwin or MSYS.  Visual C++ 
 #### Linux
 
 ```
-$ cmake -G "Unix Makefiles"
+cmake -G "Unix Makefiles" -build build .
+make
 ```
 
 ## WHERE IS EVERYTHING
