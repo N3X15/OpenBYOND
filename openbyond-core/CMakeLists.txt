@@ -86,6 +86,7 @@ set(DMSCRIPT_SOURCE
 	${BISON_DMParser_OUTPUTS}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/Driver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/Preprocessor.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/scripting/Nodes.cpp
 	)
 set(DMSCRIPT_INCLUDE
 	${CMAKE_CURRENT_SOURCE_DIR}/include/scripting/DMLexer.h

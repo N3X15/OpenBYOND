@@ -3,9 +3,6 @@
 /*
 OpenBYOND DMScript AST Nodes
 
-Originally written for DreamCatcher by nan0desu, significantly updated and 
-changed to support full DM parsing.
-
 Copyright (c) 2014 Rob "N3X15" Nelson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,6 +33,8 @@ public:
 	
 	DMNode *parent;
 	DMChildCollection children;
+	
+	DMNode* Evaluate();
 };
 
 class DMArguments : public DMNode {
@@ -50,4 +49,12 @@ public:
 	BaseValue *value;
 };
 
+// return butts is actually
+// return(butts)
+class DMReturn : public DMNode {};
+
+class DMFunctionCall : public DMNode {
+public:
+	std::string name;
+};
 #endif
