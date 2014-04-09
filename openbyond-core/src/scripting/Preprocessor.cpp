@@ -118,8 +118,17 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 			while(hasEnding(buf,"\n")||hasEnding(buf,"\r")) {
 				buf = trim(buf," \t\r\n");
 			}
-			if(!IsIgnoring() && endtokens.size()==0)
+			if(!IsIgnoring() && endtokens.size()==0) {
+				printf("LINE ");
+				std::string _c;
+				for(int i = 0;i<buf.length();i++) {
+					_c=buf.substr(i,1);
+					if(_c=="\n" || _c=="\r") continue;
+					printf("%s",_c.c_str());
+				}
+				printf("\n");
 				fout << buf;// << "\r\n";
+			}
 			buf = "";
 			encounteredOtherCharacters=false;
 		} else if(c == '\\') {
@@ -158,17 +167,20 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 			if(c!='\t'&&c!=' ')
 				encounteredOtherCharacters=true;
 		}
-		printf("TOKEN %s\n",token.c_str());
+		//printf("TOKEN %s\n",token.c_str());
 		if(token=="/*") {
-			printf("BEGIN COMMENT\n");
 			endtokens.push("*/");
 			rewindBuffer(buf,1);
+			//printf("BEGIN COMMENT\n");
+			//printf("START BUFFER %s\n",buf.c_str());
 			continue;
 		} else {
 			if(endtokens.size()>0 && endtokens.top() == token){
-				printf("END COMMENT\n");
 				endtokens.pop();
 				rewindBuffer(buf,1);
+				//printf("END COMMENT\n");
+				//printf("END BUFFER %s\n",buf.c_str());
+				continue;
 			}
 		}
 		if(endtokens.size()>0)
@@ -271,7 +283,9 @@ void Preprocessor::consumePPToken(std::iostream &fin, std::iostream &fout) {
 	std::string token = args[0];
 	args=VectorCopy<std::string>(args,1);
 	
-	//fout << "/* Found #" << token << ". */";
+	fout << "\n/* Found #" << token;
 	
 	consumePreprocessorToken(token,args);
+	
+	fout << " (ignore:" << (this->IsIgnoring()?"y":"n") << "). */";
 }

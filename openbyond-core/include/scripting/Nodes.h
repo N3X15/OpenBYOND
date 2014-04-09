@@ -37,9 +37,7 @@ public:
 	DMNode* Evaluate();
 };
 
-class DMArguments : public DMNode {
-	
-};
+class DMArguments : public DMNode {};
 
 class DMVariable : public DMNode {
 public:
