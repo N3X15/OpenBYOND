@@ -88,33 +88,44 @@ std::string Preprocessor::ParseFile(std::string filename) {
 	return filename+".tmp";
 }
 
-void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::string streamname) {
+void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::string _streamname) {
 	fout << "/// OpenBYOND Preprocessed Code\r\n";
-	fout << "/// File: " << streamname << "\r\n";
+	fout << "/// File: " << _streamname << "\r\n";
 	fout << "///\r\n\r\n";
-	// Parse char by char
-	char c;
-	char lastchar=0;
-	char nextlastchar=0;
-	std::string buf;
-	bool escape=false;
-	bool encounteredOtherCharacters = false;
-	int ignorelevel = 0;
-	int line=1;
-	std::string token("");
-	std::stack<std::string> endtokens;
-	bool skipNextChar=false;
+	
+	// Set up our variables.
+	////////////////////////////
+	
+	char c;                               // Current character.
+	char lastchar    = 0;                 // Last character.
+	char nextlastchar= 0;                 // Next last char (usually c); Here to solve some flow problems.
+	std::string buf;                      // Line buffer.
+	bool escape=false;                    // Next char is escaped?
+	bool encounteredOtherCharacters = false; // Self-documenting :V
+	std::string token("");                // lastchar + c (makes some things easier)
+	std::stack<std::string> endtokens;    // Stack of ending tokens (used in comment stacks)
+	
+	// Update logging stuff.
+	this->streamname = _streamname;
+	this->line = 1;
+	
+	// For each char in fin (including whitespace)
 	while (fin >> std::noskipws >> c) {
-		// Skip windows return characters.
 		token="";
-		if(nextlastchar)
+		// Set up lastchar, if set.
+		if(nextlastchar) {
 			lastchar = nextlastchar;
 			token += lastchar;
+		}
+		
 		token += c;
 		nextlastchar=c;
+		// Skip windows return characters.
 		if(c == '\r') continue;
-		if(c == '\n' && !escape) {
-			line++;
+		// Handle newlines.
+		if(c == '\n') {
+			line++; 
+			if(escape) continue;
 			while(hasEnding(buf,"\n")||hasEnding(buf,"\r")) {
 				buf = trim(buf," \t\r\n");
 			}
@@ -131,18 +142,21 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 			}
 			buf = "";
 			encounteredOtherCharacters=false;
+		// Escape sequences
 		} else if(c == '\\') {
 			escape=true;
 			continue;
+		// Preprocessor tokens!
 		} else if(c == '#') {
 			if(endtokens.size()>0) continue;
-			if(encounteredOtherCharacters && ignorelevel == 0){
+			if(encounteredOtherCharacters){
 				printf("%s:%d [PP] ERROR:  Encountered non-whitespace characters before preprocessor token!",streamname.c_str(),line);
 				return;
 			}
 			consumePPToken(fin,fout);
 			lastchar=0;
 			continue;
+		// Strings cause problems, handle them.
 		} else if(c == '"' || c == '\'') {
 			std::stringstream o("");
 			o << c;
@@ -154,6 +168,7 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 			if(!IsIgnoring() && endtokens.size()==0) 
 				buf += o.str();
 			continue;
+		// Single-line comment
 		} else if(lastchar == '/' && c == '/') {
 			std::stringstream devnull("");
 			consumeUntil(fin,devnull,'\n');
@@ -163,6 +178,7 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 			encounteredOtherCharacters=false;
 			lastchar=0;
 			continue;
+		// Everything else passes through.
 		} else {
 			if(c!='\t'&&c!=' ')
 				encounteredOtherCharacters=true;
@@ -171,31 +187,31 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 		if(token=="/*") {
 			endtokens.push("*/");
 			rewindBuffer(buf,1);
-			//printf("BEGIN COMMENT\n");
-			//printf("START BUFFER %s\n",buf.c_str());
 			continue;
 		} else {
 			if(endtokens.size()>0 && endtokens.top() == token){
 				endtokens.pop();
 				rewindBuffer(buf,1);
-				//printf("END COMMENT\n");
-				//printf("END BUFFER %s\n",buf.c_str());
 				continue;
 			}
 		}
+		// In a comment?  Don't update the buffer.
 		if(endtokens.size()>0)
 			continue;
-		buf += c; // Or whatever
+		
+		// Append to buffer, rinse, repeat.
+		buf += c;
 	}
 }
 	
 void Preprocessor::consumePreprocessorToken(std::string token,std::vector<std::string> args)
 {
-	if(token == "ifdef")  consumeIfdef(args);
-	if(token == "else")   consumeElse(args);
-	if(token == "endif")  consumeEndif(args);
-	if(token == "define") consumeDefine(args);
-	if(token == "undef")  consumeUndef(args);
+	if(token == "ifdef")       consumeIfdef(args);
+	else if(token == "else")   consumeElse(args);
+	else if(token == "endif")  consumeEndif(args);
+	else if(token == "define") consumeDefine(args);
+	else if(token == "undef")  consumeUndef(args);
+	else printf("%s:%d WARNING: Unhandled preprocessor token '%s'!",streamname.c_str(),line,token.c_str());
 }
 
 bool Preprocessor::IsIgnoring() {

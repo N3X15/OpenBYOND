@@ -88,5 +88,9 @@ private:
 	void consumeUntil(std::iostream &fin, std::iostream &fout, char endmarker);
 	void consumeUntil(std::iostream &fin, std::iostream &fout, std::string endmarker);
 	void consumePPToken(std::iostream &fin, std::iostream &fout);
+	
+	
+	int line;                 // Line number
+	std::string streamname;   // Stream/filename for logging.
 };
 #endif
