@@ -25,11 +25,12 @@ THE SOFTWARE.
 */
 #include <string>
 #include <map>
+#include <vector>
 
 #include "Value.h"
 class DMNode {
 public:
-	typedef std::map<std::string,DMNode *> DMChildCollection;
+	typedef std::vector<DMNode *> DMChildCollection;
 	
 	DMNode *parent;
 	DMChildCollection children;
@@ -39,12 +40,42 @@ public:
 
 class DMArguments : public DMNode {};
 
-class DMVariable : public DMNode {
+#define VAR_GLOBAL       0x01 // var/global/ shit.  Dunno why we need this, since BYOND doesn't really care 
+	                      //  if you declare a var as global, as long as it's in global context.
+#define VAR_CONST        0x02 // Constant, immutable
+#define VAR_DECLARATIVE  0x04 // "var/butts = 1" is declarative, while "butts = 1" isn't.
+
+/**
+ * Used to add the variable to the Scope.
+ */
+class DMVariableDecl : public DMNode {
 public:
 	std::string name;
 	std::string type;
 	int flags;
 	BaseValue *value;
+};
+
+#define PROC_DECLARATIVE  0x01 // "proc/butts()" is declarative, while "butts()" isn't.
+/**
+ * Represents a proc on the AST tree.
+ */
+class DMProc : public DMNode {
+public:
+	std::string name;
+	std::vector<std::string> path;
+	int flags;
+};
+
+// Variable referenced in 
+class DMVariableRef : public DMNode {
+	std::string name;
+};
+
+// honk = expr
+class DMAssignment: public DMNode {
+	DMVariableRef *left;
+	DMNode *right;
 };
 
 // return butts is actually

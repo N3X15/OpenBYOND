@@ -8,6 +8,7 @@
 
 #include "string_utils.h"
 #include "ObjectTree.h"
+#include "Proc.h"
 
 #include "scripting/Driver.h"
 #include "scripting/DMLexer.h"
@@ -25,6 +26,7 @@ Driver::Driver()
 
 bool Driver::parse_stream(std::iostream& in, const std::string& sname)
 {
+	atomContext = NULL; // Reset context.
 	streamname = sname;
 	
 	Lexer scanner(&in);
@@ -70,6 +72,11 @@ void Driver::error(const class location& l,
 void Driver::error(const std::string& m)
 {
     std::cerr << m << std::endl;
+}
+
+void pushToContext(DMProc *proc)
+{
+	
 }
 
 Atom* Driver::pushContext(TokenizedPath atom_path) 
@@ -127,8 +134,11 @@ Atom* Driver::pushContext(TokenizedPath atom_path)
 		else*/
 		found = ObjectTree::getInstance().AddAtom(new Atom(npath, "", 0));
 	}
+	this->atomContext = found;
 	this->pindent = indentlevel;
 	return found;
 }
-
+Proc* Driver::pushToContext(DMProc *parsed) {
+	Proc *proc = new Proc(parsed->name);
+}
 } // End DM Namespace.

@@ -64,6 +64,7 @@ set(BASICS_SOURCE
 	${CMAKE_CURRENT_SOURCE_DIR}/src/string_utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/vector_utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Atom.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/Proc.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Value.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ObjectTree.cpp
 	)
@@ -71,6 +72,7 @@ set(BASICS_INCLUDE
 	${CMAKE_CURRENT_SOURCE_DIR}/include/string_utils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/vector_utils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Atom.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/Proc.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Value.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/ObjectTree.h
 	)

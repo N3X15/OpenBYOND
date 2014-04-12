@@ -130,6 +130,7 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 				buf = trim(buf," \t\r\n");
 			}
 			if(!IsIgnoring() && endtokens.size()==0) {
+				/*
 				printf("LINE ");
 				std::string _c;
 				for(int i = 0;i<buf.length();i++) {
@@ -138,7 +139,8 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 					printf("%s",_c.c_str());
 				}
 				printf("\n");
-				fout << buf;// << "\r\n";
+				*/
+				fout << buf;
 			}
 			buf = "";
 			encounteredOtherCharacters=false;
@@ -172,7 +174,7 @@ void Preprocessor::ParseStream(std::iostream &fin, std::iostream &fout, std::str
 		} else if(lastchar == '/' && c == '/') {
 			std::stringstream devnull("");
 			consumeUntil(fin,devnull,'\n');
-			printf("Discarded \"//%s\"\n",devnull.str().c_str());
+			//printf("Discarded \"//%s\"\n",devnull.str().c_str());
 			rewindBuffer(buf,1);
 			rewindStream(fin,1);
 			encounteredOtherCharacters=false;
@@ -299,9 +301,9 @@ void Preprocessor::consumePPToken(std::iostream &fin, std::iostream &fout) {
 	std::string token = args[0];
 	args=VectorCopy<std::string>(args,1);
 	
-	fout << "\n/* Found #" << token;
+	//fout << "\n/* Found #" << token;
 	
 	consumePreprocessorToken(token,args);
 	
-	fout << " (ignore:" << (this->IsIgnoring()?"y":"n") << "). */";
+	//fout << " (ignore:" << (this->IsIgnoring()?"y":"n") << "). */";
 }

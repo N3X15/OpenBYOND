@@ -84,6 +84,12 @@ public:
 	*/
 	Atom* pushContext(TokenizedPath atomfragment);
 	
+	/** Push a proc to the atom in context.
+	 * Attaches a proc to the atom currently in context.
+	 * @param proc The proc itself.
+	 */
+	Proc* pushToContext(DMProc *proc);
+	
 	/**
 	 * Handle unindenting x levels.
 	 * @param levels How many levels to dedent.
@@ -101,6 +107,7 @@ private:
 	// 
 	// /obj/item/knife = {obj,item,knife}
 	TokenizedPath context;
+	Atom *atomContext;
 	
 	std::vector<int> popLevels;
 	std::map<std::string, Atom*> atoms;

@@ -29,12 +29,14 @@ THE SOFTWARE.
 #include <vector>
 
 #include "Value.h"
+#include "scripting/Nodes.h"
 
 #define TURF_LAYER
 #define AREA_LAYER
 #define OBJ_LAYER
 #define MOB_LAYER
 
+class Proc;
 class Atom
 {
 public:
@@ -49,8 +51,11 @@ public:
 	// List of var names that were specified by the map, if atom was loaded from a :class:`byond.map.Map`.
 	std::vector<std::string> mapSpecified;
 
-	// Child atoms and procs.
+	// Child atoms.
 	std::map<std::string,Atom *> children;
+
+	// Procs.
+	std::map<std::string,Proc *> procs;
 
 	// The parent of this atom.
 	Atom *parent;

@@ -89,7 +89,9 @@ class Atom;
 
 %type <strval> IDENTIFIER;
 %type <path> path abspath relpath pathslash;
-%type <atom> atomdef procdef;
+%type <atom> atomdef;
+
+%type <node> procdef procdefs procdef_no_path
 
 /* keep track of the current position within the input */
 %locations
@@ -168,7 +170,24 @@ procslash
 	: PROC '/' ;
 	
 procblock
-	: PROC INDENT procdefs DEDENT              { Y_DEBUG("procblock",1); }
+	: PROC INDENT procdefs DEDENT              { 
+		/* Proc block
+		```
+		proc
+			honk()
+			...
+		```
+		All child procs are declarative.
+		*/
+		Y_DEBUG("procblock",1);
+		DMNode *node = (DMNode*)($3);
+		DMNode::DMChildCollection::iterator it;
+		for(it=node->children.begin();it!=node->children.end();it++) {
+			DMProc *proc = (DMProc*)(*it);
+			proc->flags |= PROC_DECLARATIVE;
+			driver.pushToContext(proc);
+		}
+	}
 	;
 
 atomdef
@@ -220,7 +239,10 @@ procdef
 		std::vector<std::string>* path = $1;
 		std::string identifier = path->back();
 		path->pop_back();
-		$$ = driver.pushContext((DM::Driver::TokenizedPath)(*path));
+		DMProc *proc = new DMProc();
+		proc->name = identifier;
+		proc->path = *path;
+		$$ = proc;
 	}
 	;
 	
@@ -239,8 +261,16 @@ arguments
 	;
 	
 procdefs
-	: procdef_no_path procdefs
-	| procdef_no_path
+	: procdef_no_path procdefs {
+		DMNode *node = $2;
+		node->children.push_back($1);
+		$$ = node;
+	}
+	| procdef_no_path {
+		DMNode *collection = new DMNode();
+		collection->children.push_back($1);
+		$$ = collection;
+	}
 	;
 	
 const_expression

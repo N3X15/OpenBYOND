@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include "Atom.h"
+#include "Proc.h"
 
 Atom::Atom(std::string path, std::string filename, unsigned int line):
 	properties(),
@@ -47,7 +48,7 @@ std::vector<std::string> Atom::splitPath(){
 		switch(c){
 		case '/':
 			chunks.push_back(buffer);
-			buffer="";
+			buffer = "";
 			break;
 		default:
 			buffer += c;
