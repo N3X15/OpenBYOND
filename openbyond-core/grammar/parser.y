@@ -247,7 +247,14 @@ procdef
 	;
 	
 procdef_no_path
-	: IDENTIFIER argblock INDENT expressions DEDENT
+	: IDENTIFIER argblock INDENT expressions DEDENT {
+		Y_DEBUG("procdef_no_path",1);
+		std::vector<std::string> path;
+		DMProc *proc = new DMProc();
+		proc->name = $1;
+		proc->path = path;
+		$$ = proc;
+	}
 	;
 	
 argblock
