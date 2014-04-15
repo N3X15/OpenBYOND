@@ -46,8 +46,8 @@ if (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NO
   )
 endif (NOT ${FLEX_INCLUDE_DIR} OR ${FLEX_INCLUDE_DIR} STREQUAL "FLEX_INCLUDE_DIR-NOTFOUND")
 
-message("[OpenBYOND Core] Writing config.h to ${CMAKE_CURRENT_BINARY_DIR}")
-configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+message("[OpenBYOND Core] Writing config.h to ${CMAKE_CURRENT_BINARY_DIR}/include")
+configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/config.h)
 
 # Add the include folder to the include path
 include_directories(
@@ -69,6 +69,7 @@ set(BASICS_SOURCE
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ObjectTree.cpp
 	)
 set(BASICS_INCLUDE
+	${CMAKE_CURRENT_BINARY_DIR}/include/config.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/string_utils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/vector_utils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Atom.h
@@ -99,6 +100,8 @@ set(DMSCRIPT_INCLUDE
 
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_INCLUDE})
 SOURCE_GROUP("src\\script" FILES ${DMSCRIPT_SOURCE})
+
+set(OPENBYOND_CORE_INCLUDE_DIR CACHE STRING ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 set(OPENBYOND_CORE_INCLUDE CACHE STRING
 	${BASICS_INCLUDE}
