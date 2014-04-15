@@ -282,6 +282,7 @@ procdefs
 	
 const_expression
 	: NUMBER
+	| STRING
 	| '(' const_expression ')'
 	| const_expression '*' const_expression
 	| const_expression '/' const_expression
