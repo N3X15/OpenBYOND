@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
 			std::cout << std::endl;
 		}
 		DM::Driver *driver = new DM::Driver();
+		driver->trace_parsing=t_verbose.getValue();
+		driver->trace_scanning=t_verbose.getValue();
 		std::vector<std::string> files = t_files.getValue();
 		for(int i = 0; i < files.size(); i++)
 		{

@@ -40,17 +40,22 @@ bool Driver::parse_stream(std::iostream& in, const std::string& sname)
 
 bool Driver::parse_file(const std::string &filename)
 {
-    std::fstream in(filename.c_str());
-    if (!in.good()) return false;
-    std::string outfile=filename+".dmpp";
-    std::fstream out(outfile.c_str(),std::fstream::out);
-    if (!out.good()) return false;
-    assert(preprocessor != 0);
-    preprocessor->ParseStream(in,out,filename);
-    std::cout << ">>> " << outfile << " written!" << std::endl;
-    out.close();
-    in.seekg(0);
-    return parse_stream(in, filename);
+	std::fstream in(filename.c_str());
+	if (!in.good()) return false;
+	/*
+	std::string outfile=filename+".dmpp";
+	std::fstream out(outfile.c_str(),std::fstream::out);
+	if (!out.good()) return false;
+	preprocessor->ParseStream(in,out,filename);
+	std::cout << ">>> " << outfile << " written!" << std::endl;
+	out.close();
+	*/
+	assert(preprocessor != 0);
+	std::string pp_internal("");
+	std::stringstream preprocessed(pp_internal);
+	preprocessor->ParseStream(in,preprocessed,filename);
+	preprocessed.seekg(0);
+	return parse_stream(preprocessed, filename);
 }
 
 bool Driver::parse_string(const std::string &input, const std::string& sname)
