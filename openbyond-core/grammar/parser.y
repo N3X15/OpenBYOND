@@ -282,7 +282,7 @@ procdefs
 	
 const_expression
 	: NUMBER
-	| STRING
+	| STRING  { $$ = new DMString($1); }
 	| '(' const_expression ')'
 	| const_expression '*' const_expression
 	| const_expression '/' const_expression
