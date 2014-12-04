@@ -1,7 +1,7 @@
 /*
 OpenBYOND DMScript Bison Syntax
 
-Originally written for DreamCatcher by nan0desu, significantly updated and 
+Originally written for DreamCatcher by Jp, significantly updated and 
 changed to support full DM parsing.
 
 Copyright (c) 2014 Rob "N3X15" Nelson
@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 %skeleton "lalr1.cc"
 %require "2.3"
 %defines
