@@ -24,6 +24,10 @@ set(LIBRARY_OUTPUT_PATH    ${CMAKE_SOURCE_DIR}/bin)
 find_package(allegro 5.0 REQUIRED COMPONENTS
   main font ttf native_dialog primitives tiled
 )
+
+# Find TCLAP
+find_package(TCLAP REQUIRED)
+
 #include_directories(${allegro_INCLUDE_DIRS})
 #list(APPEND ${PROJECT_NAME}_LINK_LIBS ${allegro_LIBRARIES})
 

@@ -3,6 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <map>
+
+#include "Atom.h"
+#include "scripting/Nodes.h"
+#include "scripting/Preprocessor.h"
+
 
 namespace DM {
 
@@ -15,55 +21,99 @@ namespace DM {
 class Driver
 {
 public:
-    /// construct a new parser driver context
-    Driver();
+	// Typedef
+	typedef std::vector<std::string> TokenizedPath;
+	
+	/// construct a new parser driver context
+	Driver();
 
-    /// enable debug output in the flex scanner
-    bool trace_scanning;
+	/// enable debug output in the flex scanner
+	bool trace_scanning;
 
-    /// enable debug output in the bison parser
-    bool trace_parsing;
+	/// enable debug output in the bison parser
+	bool trace_parsing;
 
-    /// stream name (file or input stream) used for error messages.
-    std::string streamname;
+	/// enable debug output in the shitty preprocessor
+	bool trace_preprocessing;
 
-    /** Invoke the scanner and parser for a stream.
-     * @param in	input stream
-     * @param sname	stream name for error messages
-     * @return		true if successfully parsed
-     */
-    bool parse_stream(std::istream& in, const std::string& sname = "stream input");
+	/// stream name (file or input stream) used for error messages.
+	std::string streamname;
 
-    /** Invoke the scanner and parser on an input string.
-     * @param input	input string
-     * @param sname	stream name for error messages
-     * @return		true if successfully parsed
-     */
-    bool parse_string(const std::string& input, const std::string& sname = "string stream");
+	/** Invoke the scanner and parser for a stream.
+	* @param in	input stream
+	* @param sname	stream name for error messages
+	* @return		true if successfully parsed
+	*/
+	bool parse_stream(std::iostream& in, const std::string& sname = "stream input");
 
-    /** Invoke the scanner and parser on a file. Use parse_stream with a
-     * std::ifstream if detection of file reading errors is required.
-     * @param filename	input file name
-     * @return		true if successfully parsed
-     */
-    bool parse_file(const std::string& filename);
+	/** Invoke the scanner and parser on an input string.
+	* @param input	input string
+	* @param sname	stream name for error messages
+	* @return		true if successfully parsed
+	*/
+	bool parse_string(const std::string& input, const std::string& sname = "string stream");
 
-    // To demonstrate pure handling of parse errors, instead of
-    // simply dumping them on the standard error output, we will pass
-    // them to the driver using the following two member functions.
+	/** Invoke the scanner and parser on a file. Use parse_stream with a
+	* std::ifstream if detection of file reading errors is required.
+	* @param filename	input file name
+	* @return		true if successfully parsed
+	*/
+	bool parse_file(const std::string& filename);
 
-    /** Error handling with associated line number. This can be modified to
-     * output the error e.g. to a dialog box. */
-    void error(const class location& l, const std::string& m);
+	// To demonstrate pure handling of parse errors, instead of
+	// simply dumping them on the standard error output, we will pass
+	// them to the driver using the following two member functions.
 
-    /** General error handling. This can be modified to output the error
-     * e.g. to a dialog box. */
-    void error(const std::string& m);
+	/** Error handling with associated line number. This can be modified to
+	* output the error e.g. to a dialog box. */
+	void error(const class location& l, const std::string& m);
 
-    /** Pointer to the current lexer instance, this is used to connect the
-     * parser to the scanner. It is used in the yylex macro. */
-    class Lexer* lexer;
+	/** General error handling. This can be modified to output the error
+	* e.g. to a dialog box. */
+	void error(const std::string& m);
+
+	/** Pointer to the current lexer instance, this is used to connect the
+	* parser to the scanner. It is used in the yylex macro. */
+	class Lexer* lexer;
+	
+	Preprocessor* preprocessor;
+
+	/** Push an atom to the context stack.
+	* This is used to construct the ObjectTree and determine where children are on the aforementioned tree.
+	* @param atomfragment Atom fragment ({,obj}, {gun,barry})
+	*/
+	Atom* pushContext(TokenizedPath atomfragment);
+	
+	/** Push a proc to the atom in context.
+	 * Attaches a proc to the atom currently in context.
+	 * @param proc The proc itself.
+	 */
+	Proc* pushToContext(DMProc *proc);
+	
+	/**
+	 * Handle unindenting x levels.
+	 * @param levels How many levels to dedent.
+	 */
+	void popIndent(int levels);
+	
+	/**
+	 * Handle indenting x levels.
+	 * @param levels How many levels to indent.
+	 */
+	void pushIndent(int levels);
+    
+private:
+	// Context stack
+	// 
+	// /obj/item/knife = {obj,item,knife}
+	TokenizedPath context;
+	Atom *atomContext;
+	
+	std::vector<int> popLevels;
+	std::map<std::string, Atom*> atoms;
+	int pindent;
 };
 }
+typedef DM::Driver::TokenizedPath DMTokenPath;
 
 #endif // DRIVER_H

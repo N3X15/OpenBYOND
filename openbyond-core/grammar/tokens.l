@@ -41,9 +41,9 @@ typedef DM::Parser::token_type token_type;
 
 #define MAX_DEPTH 72
 
-#define LEX_DEBUG(x)   printf("%s",x)
-#define DEBUG_TOKEN(x) printf("%s ",x)
-#define DEBUG_EOL      printf("\n");
+#define LEX_DEBUG(x)   if(trace) {printf("%s", x);}
+#define DEBUG_TOKEN(x) if(trace) {printf("%s ",x);}
+#define DEBUG_EOL      if(trace) {printf("\n");}
 
 #define DM_TAB_WIDTH 4
 
@@ -53,9 +53,12 @@ int indent_stack[200];         /* Stack of indents. */
 int current_indent_level = 0;  /* indentation of the current line */
 int bracket_indent_level = 0;  /* indentations given by brackets because BYOND is fucking dumb. */
 int indent_level = 0;          /* indentation level passed to the parser */
-
+int nested_comments = 0;       /* How many nested comments do we have on the stack. */
 /* Current position */
 int linenum = 1;
+
+/* Debugging? */
+bool trace = false;
 /* %option yyclass="BaseLexer" */
 %}
 
@@ -71,34 +74,43 @@ int linenum = 1;
 
 %%
 <INDENT_PROCESSING>" "  { current_line_indent++; }
-<INDENT_PROCESSING>"\t" { current_line_indent += (current_line_indent + 4) & ~3; }
+<INDENT_PROCESSING>"\t" { current_line_indent += DM_TAB_WIDTH; }
 <INDENT_PROCESSING>"\n" { current_line_indent = 0; DEBUG_EOL; linenum++; /*ignoring blank line */ }
 <INDENT_PROCESSING>.    {
-		//printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
+#ifdef LEX_TRACE
+		printf("\n[INDENT_PROCESSING - CLI: %3d, CIL: %d]",current_line_indent,current_indent_level);
+		for(int i = 0;i<current_indent_level;i++)
+			printf("  "); // 2 spaces
+#endif
 		unput(*yytext);
 		if (current_line_indent > indent_level) {
-			indent_stack[current_indent_level++]=indent_level=current_line_indent;
+			indent_stack[++current_indent_level]=indent_level=current_line_indent;
 			DEBUG_TOKEN("INDENT");
 			return token::INDENT;
 		} else if (current_line_indent < indent_level) {
 			current_indent_level--;
-			indent_level=indent_stack[current_indent_level--];
+			indent_level=indent_stack[current_indent_level];
+			//printf(" [nIL=%d]",indent_level);
 			DEBUG_TOKEN("DEDENT");
-			DEBUG_EOL;
+			//DEBUG_EOL;
 			return token::DEDENT;
 		} else {
 			//LEX_DEBUG("<INITIAL>");
 			BEGIN INITIAL;
 		}
 	}
-<<EOF>>                {
-		//printf("INDENT_PROCESSING - CLI: %d, IL: %d",current_line_indent,indent_level);
+<<EOF>> {
+#ifdef LEX_TRACE
+		printf("\n[INDENT_PROCESSING - CLI: %3d, CIL: %d]",current_line_indent,current_indent_level);
+		for(int i = 0;i<current_indent_level;i++)
+			printf("  "); // 2 spaces
+#endif
 		current_line_indent=0;
 		if (current_indent_level>0) {
 			unput(*yytext);
 			current_indent_level--;
-			DEBUG_TOKEN("DEDENT");
-			DEBUG_EOL;
+			DEBUG_TOKEN("DEDENT(EOF)");
+			//DEBUG_EOL;
 			return token::DEDENT;
 		} else {
 			yyterminate();
@@ -111,7 +123,7 @@ int linenum = 1;
 			BEGIN INDENT_PROCESSING; 
 		}
 		linenum++;
-		DEBUG_EOL;
+		//DEBUG_EOL;
 	}
 
 %{ /* Bracket "indents".  BYOND is stupid. */ %}
@@ -134,7 +146,16 @@ int linenum = 1;
 \/\*                    { BEGIN MULTICOMMENT; }
 <MULTICOMMENT>\\.       { ; }
 <MULTICOMMENT>\\\n      { linenum++; }
-<MULTICOMMENT>\*\/      { BEGIN INITIAL; }
+<MULTICOMMENT>\/\*      {
+	nested_comments++;
+}
+<MULTICOMMENT>\*\/      { 
+	if(nested_comments>0) {
+		nested_comments--;
+	} else {
+		BEGIN INITIAL;
+	}
+}
 <MULTICOMMENT>.         { ; }
 <MULTICOMMENT>\n        { linenum++; }
 
@@ -199,12 +220,13 @@ int Lexer::yylex()
 {
 	return 0;
 }
-/*
-void Lexer::set_debug(bool b)
+void Lexer::set_debug_level(bool b)
 {
-    yy_flex_debug = b;
+	trace = b;
 }
-*/
+int Lexer::get_indent_level() {
+	return current_indent_level;
+}
 }
 
 /* This implementation of ExampleFlexLexer::yylex() is required to fill the
@@ -217,8 +239,8 @@ void Lexer::set_debug(bool b)
 
 int yyFlexLexer::yylex()
 {
-    std::cerr << "in Lexer::yylex() !" << std::endl;
-    return 0;
+	std::cerr << "in Lexer::yylex() !" << std::endl;
+	return 0;
 }
 
 /* When the scanner receives an end-of-file indication from YY_INPUT, it then
@@ -229,11 +251,11 @@ int yyFlexLexer::yylex()
 /*
 int yyFlexLexer::yywrap()
 {
-    return 1;
+	return 1;
 }
 */
 int yyerror (const char *s)
 {
-    printf("Parser error[%d]: %s \n",linenum,s);
-    return 0;
+	printf("Parser error[%d]: %s \n",linenum,s);
+	return 0;
 }

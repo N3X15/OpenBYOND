@@ -24,7 +24,8 @@ set(VERSION_PATCH 1)
 
 # Add the include folder to the include path
 include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${OPENBYOND_CORE_INCLUDE_DIR}
+	${TCLAP_INCLUDE_DIR}
 	)
 
 # Set the source files, headers, and link libraries
@@ -41,6 +42,7 @@ SOURCE_GROUP("src\\parser" FILES ${PARSER_SOURCE})
 
 # Compile the library
 add_executable(${TARGET_NAME}
+	${OPENBYOND_CORE_INCLUDE}
 	${PARSER_SOURCE}
 )
 target_link_libraries(${TARGET_NAME} openbyond-core)

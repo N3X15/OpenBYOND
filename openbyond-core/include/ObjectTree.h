@@ -36,12 +36,17 @@ public:
 	};
 
 	/**
-	* Build the actual tree from the collected atoms.
-	*/
+	 * Build the actual tree from the collected atoms.
+	 */
 	void BuildTree();
-
-	// Used in script driver. Do NOT use after BuildTree.
-	void AddAtom(Atom *a);
+	
+	/* Internal Use! */
+	Atom *AddAtom(Atom *a);
+	
+	/**
+	 * Clear everything.
+	 */
+	void Clear();
 
 	/**
 	* Get an atom, given its path.
@@ -50,7 +55,7 @@ public:
 	*/
 	Atom *GetAtom(std::string path);
 
-	typedef std::map<std::string, Atom> AtomMap;
+	typedef std::map<std::string, Atom*> AtomMap;
 
 	// All atoms, associated with their path.
 	AtomMap atoms;

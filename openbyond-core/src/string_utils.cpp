@@ -33,6 +33,8 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include <sstream>
 #include <vector>
+#include <algorithm>
+#include <iostream>
 
 /**
 http://stackoverflow.com/a/8098080
@@ -165,3 +167,89 @@ int asprintf(char **str, const char *fmt, ...)
         return ret;
 }
 #endif
+
+std::vector<std::string> split(std::string s, char delim) {
+	size_t pos = 0;
+	std::vector<std::string> elems;
+	std::string buffer("");
+	for(pos=0;pos<s.length();pos++) {
+		char c = s[pos];
+		if(c==delim){
+			elems.push_back(buffer);
+			buffer = "";
+			continue;
+		}
+		buffer += c;
+	}
+	elems.push_back(buffer);
+	return elems;
+}
+
+struct appender
+{
+  appender(char d, std::string& sd, int ic) : delim(d), dest(sd), count(ic)
+  {
+    dest.reserve(2048);
+  }
+
+  void operator()(std::string const& copy)
+  {
+    dest.append(copy);
+    if (--count)
+      dest.append(1, delim);
+  }
+
+  char delim;
+  std::string& dest;
+  int count;
+};
+
+void implode(const std::vector<std::string>& elems, char delim, std::string& s)
+{
+  std::for_each(elems.begin(), elems.end(), appender(delim, s, elems.size()));
+}
+
+bool hasEnding (std::string const &fullString, std::string const &ending)
+{
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else {
+        return false;
+    }
+}
+
+std::string trim(const std::string& str,
+                 const std::string& whitespace)
+{
+    const auto strBegin = str.find_first_not_of(whitespace);
+    if (strBegin == std::string::npos)
+        return ""; // no content
+
+    const auto strEnd = str.find_last_not_of(whitespace);
+    const auto strRange = strEnd - strBegin + 1;
+
+    return str.substr(strBegin, strRange);
+}
+
+std::string reduce(const std::string& str,
+                   const std::string& fill,
+                   const std::string& whitespace)
+{
+    // trim first
+    auto result = trim(str, whitespace);
+
+    // replace sub ranges
+    auto beginSpace = result.find_first_of(whitespace);
+    while (beginSpace != std::string::npos)
+    {
+        const auto endSpace = result.find_first_not_of(whitespace, beginSpace);
+        const auto range = endSpace - beginSpace;
+
+        result.replace(beginSpace, range, fill);
+
+        const auto newStart = beginSpace + fill.length();
+        beginSpace = result.find_first_of(whitespace, newStart);
+    }
+
+    return result;
+}

@@ -61,26 +61,39 @@ THE SOFTWARE.
 %nonassoc UMINUS
 %nonassoc '(' ')'
 
-%union {
-	char* strval;
-}
-
-%type <strval> IDENTIFIER;
-%type <strval> defname atompath
-
 %{
+class DMNode;
+class Atom;
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "string_utils.h"
 #include "parser.hpp"
+#include "Atom.h"
 #include "scripting/Driver.h"
 #include "scripting/DMLexer.h"
+#include "scripting/Nodes.h"
 
 #undef yylex
 #define yylex driver.lexer->lex
+
+#define Y_DEBUG(rule,num) if(driver.trace_parsing) {printf("(%s[%d]) ",rule,num);}
 %}
+
+%union {
+	char* strval;
+	DMNode* node;
+	std::vector<std::string>* path;
+	Atom* atom;
+}
+
+%type <strval> IDENTIFIER;
+%type <path> path abspath relpath pathslash;
+%type <atom> atomdef;
+
+%type <node> procdef procdefs procdef_no_path
+
 /* keep track of the current position within the input */
 %locations
 %initial-action
@@ -88,9 +101,6 @@ THE SOFTWARE.
     // initialize the initial location object
     @$.begin.filename = @$.end.filename = &driver.streamname;
 };
-
-
-
 
 /* The driver is passed by reference to the parser and to the scanner. This
  * provides a simple but effective pure interface, not relying on global
@@ -101,136 +111,210 @@ THE SOFTWARE.
 %error-verbose
 
 %%
-
-definitions
-	: /* empty */
-	| definition definitions 
-	| vardef definitions 
-	| atomdef definitions
-	| procdecl definitions
+script
+	: atomdef script                           { Y_DEBUG("script",1); }
+	| procdecl script                          { Y_DEBUG("script",2); }
+	| procdef script                           { Y_DEBUG("script",3); }
+	| vardef script                            { Y_DEBUG("script",4); }
+	| /* empty */
 	;
 
-vardef
-	: var_start INDENT variable_blocks DEDENT       {;}
-	| var_start '/' variable                        {;}
+path
+	: abspath                                  { Y_DEBUG("path",1); $$ = $1;}
+	| relpath                                  { Y_DEBUG("path",2); $$ = $1;}
+	;
+	
+pathslash
+	: path '/'                                 { Y_DEBUG("pathslash", 1);
+		std::vector<std::string>* o = $1;
+		o->push_back("");
+		$$ = o;
+	}
+	;
+
+abspath
+	: '/' relpath {
+		std::vector<std::string>* o = $2;
+		o->insert(o->begin(),std::string(""));
+		$$ = o;
+	}
+	| abspath '/' IDENTIFIER                   { Y_DEBUG("abspath",2);
+		std::vector<std::string>* o = $1;
+		std::string identifier = std::string($3);
+		o->push_back(identifier);
+		$$ = o;
+	}
+	;
+
+relpath
+	: IDENTIFIER                               { Y_DEBUG("relpath",1);
+		std::vector<std::string>* o = new std::vector<std::string>();
+		std::string identifier = std::string($1);
+		o->push_back(identifier);
+		$$ = o;
+	}
+	| relpath '/' IDENTIFIER                   { Y_DEBUG("relpath",2);
+		std::vector<std::string>* o = $1;
+		std::string identifier = std::string($3);
+		o->push_back(identifier);
+		$$ = o;
+	}
 	;
 	
 procdecl
-	: atomdecl '/' PROC '/' procdef                 { /* Set child proc to use atomdecl and be declarative */ }
-	| PROC '/' procdef                              { /* Proc *whatever = $2; whatever->setDeclarative(true); return whatever */ }
-	| PROC INDENT procdefs DEDENT                   { /* Set procs created "below" to declarative. */ }
-	;
-
-procdefs
-	: procdef 
-	| procdefs procdef
-	;
-procdef
-	: defname '(' arguments ')' INDENT procbody DEDENT { /* return current->addProc($1,$3) */ }
+	: pathslash procslash procdef_no_path      { Y_DEBUG("procdecl",1); }
+	| pathslash procblock                      { Y_DEBUG("procdecl",2); }
+	| procblock                                { Y_DEBUG("procdecl",3); }
 	;
 	
-atomdef
-	: atomdecl definition_contents                  {;}
-	| atompath definition_contents                  {;}
-	;
+procslash 
+	: PROC '/' ;
 	
-atomdecl
-	: '/' atompath                                  { /*return new Atom($2);*/ }
-	;
-	
-atompath
-	: defname                                       { $$ = $1; }
-	| defname '/' atompath                          { 
-		char *o; 
-		int size = asprintf(&o, "%s/%s",$1,$3);
-		if(size<0) {
-			$$ = NULL;
-		} else {
-			$$ = o;
+procblock
+	: PROC INDENT procdefs DEDENT              { 
+		/* Proc block
+		```
+		proc
+			honk()
+			...
+		```
+		All child procs are declarative.
+		*/
+		Y_DEBUG("procblock",1);
+		DMNode *node = (DMNode*)($3);
+		DMNode::DMChildCollection::iterator it;
+		for(it=node->children.begin();it!=node->children.end();it++) {
+			DMProc *proc = (DMProc*)(*it);
+			proc->flags |= PROC_DECLARATIVE;
+			driver.pushToContext(proc);
 		}
 	}
 	;
-defname
-	: IDENTIFIER                                    { $$ = $1;}
-	;
 
-definition
-	: defname '/' definition                        {;}
-	| defname '/' vardef                            {;}
-	;
-		
-definition_contents
-	: /* empty */
-	| INDENT definitions DEDENT
-	;
-		
-var_start
-	: VAR                                           {;}
+atomdef
+	: path INDENT atom_contents DEDENT         { 
+		Y_DEBUG("atomdef",1); 
+		//printf("atomdef: %s\n",$1);
+		$$ = driver.pushContext((DM::Driver::TokenizedPath)(*$1));
+	}
 	;
 	
+atom_contents
+	: vardef atom_contents
+	| atomdef atom_contents
+	| procdef_no_path atom_contents
+	| procblock atom_contents
+	| varblock atom_contents
+	| /* empty */
+	;
+
+vardefs
+	: vardef vardefs
+	| vardef
+	;
+vardef
+	: path varblock
+	| varblock
+	| inline_vardef
+	;
+
+inline_vardef_no_default
+	// var/honk is basically 
+	// VAR path(/) identifier(honk)
+	: VAR abspath '/' IDENTIFIER                { Y_DEBUG("inline_vardef_no_default",1); }
+	| VAR '/' IDENTIFIER                        { Y_DEBUG("inline_vardef_no_default",2); }
+	;
+
+inline_vardef
+	: inline_vardef_no_default                      { Y_DEBUG("inline_vardef",1); }
+	| inline_vardef_no_default '=' const_expression { Y_DEBUG("inline_vardef",2); }
+	;
+	
+varblock
+	: VAR INDENT vardefs DEDENT
+	;
+	
+procdef
+	: path argblock INDENT expressions DEDENT {
+		Y_DEBUG("procdef",1);
+		std::vector<std::string>* path = $1;
+		std::string identifier = path->back();
+		path->pop_back();
+		DMProc *proc = new DMProc();
+		proc->name = identifier;
+		proc->path = *path;
+		$$ = proc;
+	}
+	;
+	
+procdef_no_path
+	: IDENTIFIER argblock INDENT expressions DEDENT {
+		Y_DEBUG("procdef_no_path",1);
+		std::vector<std::string> path;
+		DMProc *proc = new DMProc();
+		proc->name = $1;
+		proc->path = path;
+		$$ = proc;
+	}
+	;
+	
+argblock
+	: '(' arguments ')'
+	;
+
 arguments
-	: variable                                      {;}
-	| variable ',' arguments                        {;}
-	|
-	;
-
-variabledefs
-	: variable_blocks
-	| variables
-	;
-
-variables
-	: /* empty */
-	| variable variables
-	;
-
-variable_blocks
-	: variable_block variable_blocks
-	;
-
-varname 
-	: IDENTIFIER                                    {;}
+	: inline_vardef
+	| inline_vardef ',' arguments
+	| /* empty */
 	;
 	
-variable_block
-	: varname INDENT variable_contents DEDENT       {;}
+procdefs
+	: procdef_no_path procdefs {
+		DMNode *node = $2;
+		node->children.push_back($1);
+		$$ = node;
+	}
+	| procdef_no_path {
+		DMNode *collection = new DMNode();
+		collection->children.push_back($1);
+		$$ = collection;
+	}
 	;
 	
-variable
-	: atompath                                      {;}
-	| atompath '=' const_expression                 {;}
-	| var_start '/' variable                        {;}
-	;
-	
-variable_contents
-	: INDENT variables DEDENT
-	|
-	;
-
 const_expression
 	: NUMBER
-	| STRING
+	| STRING  { $$ = new DMString($1); }
 	| '(' const_expression ')'
-	| const_expression '+' const_expression
-	| const_expression '-' const_expression
 	| const_expression '*' const_expression
 	| const_expression '/' const_expression
-	| '-' const_expression %prec UMINUS
+	| const_expression '%' const_expression
+	| const_expression '+' const_expression
+	| const_expression '-' const_expression
 	;
-	
-procbody // And here's where it gets hairy.
-	: /* empty */
-	| expressions
+
+expression
+	: assignment
+	| inline_vardef
+	| return
 	;
 	
 expressions
 	: expression
 	| expression expressions
+	| /* empty */
 	;
-
-expression
-	: RETURN expression {;}
-	| const_expression
+	
+assignable_expression
+	: const_expression
+	| IDENTIFIER 
+	/* | string_expression */
+	;
+	
+assignment
+	: IDENTIFIER '=' assignable_expression
+	;
+return
+	: RETURN const_expression
 	;
 %%
 void DM::Parser::error(const Parser::location_type& l, const std::string& m)
